@@ -47,7 +47,6 @@ apps/frontend/.vite/
 
 # ─── Logs / Evidence outputs ────────────────────────────────────────────────────
 *.log
-evidence/screenshots/
 evidence/*.txt
 evidence/*.jsonl
 

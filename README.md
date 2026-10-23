@@ -137,10 +137,29 @@ historical-coverage-explorer/
 | Phase | Status | Description |
 |-------|--------|-------------|
 | **Phase 1** | ✅ Complete | Repository, docs, architecture, foundation |
-| Phase 2 | ⏳ Pending | Frontend product design |
+| **Phase 2** | ✅ Complete | Frontend product design, interactive workflows, mock services |
 | Phase 3 | ⏳ Pending | Backend, database, full integration |
 | Phase 4 | ⏳ Pending | Tests, observability, evidence |
 | Phase 5 | ⏳ Pending | Handoff and demo package |
+
+---
+
+## Phase 2 Screenshots
+
+The interactive frontend has been fully verified and captured in `evidence/screenshots/`:
+
+| Screenshot | Description |
+|---|---|
+| `01-overview.png` | Executive dashboard & canonical lifecycle timeline |
+| `02-active-policy.png` | Active policy view with 2024 BMW X3 |
+| `03-remove-vehicle.png` | Soft vehicle removal modal with date & educational acknowledgment |
+| `04-past-vehicle.png` | Past Vehicles section with Historical badge and preserved terms |
+| `05-coverage-history.png` | Effective-dated coverage version list and timeline |
+| `06-covered-claim.png` | Historical coverage lookup returning COVERAGE_FOUND for Jan 10 |
+| `07-claim-pinned-coverage.png` | Created claim with pinned coverage version confirmation |
+| `08-manual-review.png` | Uncovered Jan 20 lookup routing to REQUIRES_MANUAL_REVIEW |
+| `09-audit-trail.png` | Immutable system audit log with category filters and JSON inspector |
+| `10-architecture.png` | Visual 3-tier system architecture and 6 foundational product decisions |
 
 ---
 
@@ -171,6 +190,7 @@ make test-backend # Run pytest with coverage (Phase 4)
 | [Architecture](docs/03-architecture.md) | System design with diagrams |
 | [Data Model](docs/04-data-model.md) | Domain model and schema |
 | [API Contract](docs/05-api-contract.md) | Endpoint documentation |
+| [Frontend Design](docs/06-frontend-design.md) | Frontend architecture, design system, and mock abstraction |
 | [Project Plan](docs/PROJECT_PLAN.md) | Five-phase implementation plan |
 | [Assumptions](docs/ASSUMPTIONS_AND_OPEN_QUESTIONS.md) | Known assumptions and open questions |
 | [ADR-001](docs/decisions/ADR-001-effective-dated-history.md) | Why effective-dated records, not cache |

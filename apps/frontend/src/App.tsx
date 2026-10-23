@@ -1,374 +1,287 @@
-import { useEffect, useState } from 'react'
-import { api, type HealthResponse } from './lib/api'
+// ─── Main Application Component ──────────────────────────────────────────────
+// Historical Coverage Explorer — Phase 2 Frontend Product Experience
+
+import React, { useState } from 'react'
 import {
-  Activity,
-  AlertTriangle,
-  Archive,
-  CheckCircle,
-  Clock,
-  Database,
-  FileText,
-  History,
   Shield,
-  ShieldCheck,
-  XCircle,
+  Car,
+  FileText,
+  Layers,
+  History,
+  Server,
+  RotateCcw,
+  Menu,
+  X,
 } from 'lucide-react'
+import { DemoProvider } from './context/DemoContext'
+import { useDemoContext } from './context/useDemoContext'
+import { ToastContainer, type ToastType } from './components/Toast'
+import { useToast } from './components/useToast'
+import { ResetConfirmModal } from './components/ResetConfirmModal'
+import { OverviewPage } from './pages/OverviewPage'
+import { PolicyPage } from './pages/PolicyPage'
+import { FileClaimPage } from './pages/FileClaimPage'
+import { CoverageHistoryPage } from './pages/CoverageHistoryPage'
+import { AuditTrailPage } from './pages/AuditTrailPage'
+import { ArchitecturePage } from './pages/ArchitecturePage'
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-function StatusBadge({ status }: { status: 'ok' | 'degraded' | 'unknown' }) {
-  if (status === 'ok') {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
-        <CheckCircle size={12} />
-        Healthy
-      </span>
-    )
-  }
-  if (status === 'degraded') {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-400 ring-1 ring-amber-500/30">
-        <AlertTriangle size={12} />
-        Degraded
-      </span>
-    )
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-700/50 px-3 py-1 text-xs font-semibold text-slate-400 ring-1 ring-slate-600/50">
-      <Clock size={12} />
-      Checking…
-    </span>
-  )
-}
+type TabKey = 'overview' | 'policy' | 'claim' | 'coverage' | 'audit' | 'architecture'
 
-// ─── DB Badge ─────────────────────────────────────────────────────────────────
-function DbBadge({ status }: { status: 'connected' | 'unavailable' | 'unknown' }) {
-  if (status === 'connected') {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
-        <Database size={12} />
-        Connected
-      </span>
-    )
-  }
-  if (status === 'unavailable') {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-400 ring-1 ring-red-500/30">
-        <XCircle size={12} />
-        Unavailable
-      </span>
-    )
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-700/50 px-3 py-1 text-xs font-semibold text-slate-400 ring-1 ring-slate-600/50">
-      <Clock size={12} />
-      Checking…
-    </span>
-  )
-}
-
-// ─── Feature Card ─────────────────────────────────────────────────────────────
-interface FeatureCardProps {
+interface NavItem {
+  key: TabKey
+  label: string
   icon: React.ReactNode
-  title: string
-  description: string
-  phase: string
-  implemented: boolean
+  badge?: string
 }
 
-function FeatureCard({ icon, title, description, phase, implemented }: FeatureCardProps) {
-  return (
-    <div className="relative rounded-xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur transition-all duration-200 hover:border-indigo-500/40 hover:bg-slate-900/80">
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-          {icon}
-        </div>
-        {implemented ? (
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400 ring-1 ring-emerald-500/30">
-            Phase 1
-          </span>
-        ) : (
-          <span className="rounded-full bg-slate-700/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 ring-1 ring-slate-600/50">
-            {phase}
-          </span>
-        )}
-      </div>
-      <h3 className="mb-1 text-sm font-semibold text-slate-100">{title}</h3>
-      <p className="text-xs leading-relaxed text-slate-400">{description}</p>
-    </div>
-  )
-}
+function MainApp() {
+  const { state, setState, resetDemo } = useDemoContext()
+  const { toasts, addToast, dismissToast } = useToast()
+  const [activeTab, setActiveTab] = useState<TabKey>('overview')
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-// ─── Main App ─────────────────────────────────────────────────────────────────
-export function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null)
-  const [healthStatus, setHealthStatus] = useState<'ok' | 'degraded' | 'unknown'>('unknown')
-  const [dbStatus, setDbStatus] = useState<'connected' | 'unavailable' | 'unknown'>('unknown')
+  const showToast = (
+    title: string,
+    message: string,
+    variant: 'success' | 'warning' | 'error' | 'info',
+  ) => {
+    addToast(variant as ToastType, title, message)
+  }
 
-  useEffect(() => {
-    api
-      .health()
-      .then((data: HealthResponse) => {
-        setHealth(data)
-        setHealthStatus(data.status)
-        setDbStatus(data.database)
-      })
-      .catch(() => {
-        setHealthStatus('degraded')
-        setDbStatus('unavailable')
-      })
-  }, [])
+  const handleResetConfirm = () => {
+    resetDemo()
+    showToast('Demo State Reset', 'Restored to canonical baseline: BMW X3 active, zero claims.', 'info')
+  }
 
-  const features: FeatureCardProps[] = [
+  const activeVehiclesCount = state.vehicles.filter((v) => v.is_active).length
+  const pastVehiclesCount = state.vehicles.filter((v) => !v.is_active).length
+
+  const navItems: NavItem[] = [
     {
-      icon: <Shield size={20} />,
-      title: 'Effective-Dated Coverage',
-      description:
-        'Coverage records carry valid_from / valid_to dates. Historical queries use date-of-loss, not filing date.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'overview',
+      label: 'Overview & Lifecycle',
+      icon: <Shield size={18} />,
     },
     {
-      icon: <Archive size={20} />,
-      title: 'Soft Vehicle Removal',
-      description:
-        'Removing a vehicle from an active policy sets removed_at. Historical records are fully preserved.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'policy',
+      label: 'Policy & Vehicles',
+      icon: <Car size={18} />,
+      badge: `${activeVehiclesCount} active`,
     },
     {
-      icon: <History size={20} />,
-      title: 'Historical Coverage Lookup',
-      description:
-        'Query: "What coverage existed on this specific date?" returns a deterministic, auditable result.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'claim',
+      label: 'File Claim',
+      icon: <FileText size={18} />,
+      badge: state.claims.length > 0 ? `${state.claims.length}` : undefined,
     },
     {
-      icon: <FileText size={20} />,
-      title: 'Claim Coverage Pinning',
-      description:
-        'Claims are pinned to the exact coverage version at date-of-loss. Future policy changes cannot silently alter it.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'coverage',
+      label: 'Coverage History',
+      icon: <Layers size={18} />,
     },
     {
-      icon: <ShieldCheck size={20} />,
-      title: 'Proof of Insurance PDF',
-      description:
-        'Generate a DEMO ONLY proof-of-insurance document from preserved historical coverage data.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'audit',
+      label: 'Audit Trail',
+      icon: <History size={18} />,
+      badge: `${state.auditEvents.length}`,
     },
     {
-      icon: <Activity size={20} />,
-      title: 'Audit Event Trail',
-      description:
-        'Every lifecycle action — coverage activated, vehicle removed, claim filed — is durably recorded as an audit event.',
-      phase: 'Phase 3',
-      implemented: false,
-    },
-    {
-      icon: <Database size={20} />,
-      title: 'API Foundation',
-      description:
-        'FastAPI backend with health check, PostgreSQL, SQLAlchemy 2.x, and Alembic migrations configured.',
-      phase: 'Phase 1',
-      implemented: true,
-    },
-    {
-      icon: <CheckCircle size={20} />,
-      title: 'Manual Review Safety Net',
-      description:
-        'When automated lookup returns no coverage, claims route to manual review — not automatic rejection.',
-      phase: 'Phase 3',
-      implemented: false,
+      key: 'architecture',
+      label: 'Architecture & About',
+      icon: <Server size={18} />,
     },
   ]
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* ─── Header ─────────────────────────────────────────────────────── */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased">
+      {/* ─── Top Bar ───────────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 sm:px-6 py-3.5">
+        <div className="mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600">
-              <History size={18} className="text-white" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-slate-100">Historical Coverage Explorer</span>
-              <p className="text-[10px] text-slate-500">Effective-Dated Insurance Coverage Prototype</p>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden text-slate-400 hover:text-white p-1"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <div
+              onClick={() => setActiveTab('overview')}
+              className="flex items-center gap-2.5 cursor-pointer select-none"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 shadow-md">
+                <Shield size={18} className="text-white" />
+              </div>
+              <div>
+                <span className="font-bold text-sm tracking-tight text-white block">
+                  Historical Coverage Explorer
+                </span>
+                <span className="text-[10px] text-slate-400 hidden sm:block">
+                  Temporal Record Verification System
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <StatusBadge status={healthStatus} />
-            <DbBadge status={dbStatus} />
+
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* System Status Pill */}
+            <div className="hidden lg:flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/80 px-3 py-1 text-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-slate-300 font-medium text-[11px]">
+                Phase 2 Mock Services Active
+              </span>
+            </div>
+
+            {/* Prototype Badge */}
+            <span className="rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-400 ring-1 ring-indigo-500/30">
+              Interactive Demo
+            </span>
+
+            {/* Reset Demo Button */}
+            <button
+              type="button"
+              onClick={() => setIsResetModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors shadow-sm"
+              title="Reset the demo to initial canonical state"
+            >
+              <RotateCcw size={13} className="text-indigo-400" />
+              <span>Reset Demo</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* ─── Hero ───────────────────────────────────────────────────────── */}
-      <main className="mx-auto max-w-7xl px-6 py-16">
-        {/* Gradient accent */}
-        <div
-          className="pointer-events-none absolute left-1/2 top-32 h-96 w-96 -translate-x-1/2 rounded-full opacity-20 blur-3xl"
-          style={{ background: 'radial-gradient(circle, #4f46e5 0%, #7c3aed 50%, transparent 70%)' }}
-        />
-
-        <div className="relative text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-medium text-indigo-400">
-            <Activity size={12} />
-            Phase 1 — Foundation Ready
-          </div>
-
-          <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-slate-100 sm:text-6xl">
-            Historical Coverage{' '}
-            <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-              Explorer
-            </span>
-          </h1>
-
-          <p className="mx-auto mb-2 max-w-2xl text-lg leading-relaxed text-slate-400">
-            An effective-dated insurance coverage prototype demonstrating that{' '}
-            <strong className="text-slate-200">
-              removing a vehicle from an active policy is not the same as destroying its history.
-            </strong>
-          </p>
-
-          <p className="mb-12 text-sm text-slate-500">
-            Prototype foundation ready · Backend API online · Database configured
-          </p>
-
-          {/* Principle callout */}
-          <div className="mx-auto mb-16 max-w-3xl rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 p-8 text-left backdrop-blur">
-            <h2 className="mb-4 text-lg font-semibold text-indigo-300">Core Product Principle</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-red-500/10 p-4 ring-1 ring-red-500/20">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-400">
-                  Active State
-                </p>
-                <p className="text-sm text-slate-300">
-                  What the customer sees in their policy today — their current vehicles and active coverage.
-                </p>
-              </div>
-              <div className="rounded-xl bg-emerald-500/10 p-4 ring-1 ring-emerald-500/20">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-emerald-400">
-                  Historical State
-                </p>
-                <p className="text-sm text-slate-300">
-                  The durable, immutable record of what coverage existed on any given date — preserved forever.
-                </p>
-              </div>
+      {/* ─── Main Body Container ─────────────────────────────────────────────────── */}
+      <div className="flex-1 flex mx-auto w-full max-w-7xl">
+        {/* Left Sidebar Navigation */}
+        <aside
+          className={`${
+            isMobileMenuOpen ? 'block' : 'hidden'
+          } md:block w-full md:w-64 border-r border-slate-800 bg-slate-950 p-4 shrink-0 space-y-6 md:sticky md:top-[57px] md:h-[calc(100vh-57px)] overflow-y-auto`}
+        >
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-2">
+              Navigation
             </div>
-            <div className="mt-4 rounded-lg bg-slate-900/60 p-4 text-center">
-              <p className="text-sm font-medium text-slate-200">
-                "What coverage existed for vehicle X on{' '}
-                <span className="text-indigo-400">January 10</span>?"
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                This question must be answerable even after the vehicle was removed on January 15.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ─── System Status ──────────────────────────────────────────────── */}
-        <div className="mb-16 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-            System Status
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-              <p className="mb-2 text-xs text-slate-500">API Service</p>
-              <StatusBadge status={healthStatus} />
-              {health && (
-                <p className="mt-2 text-xs text-slate-500">
-                  v{health.version} · {health.service}
-                </p>
-              )}
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-              <p className="mb-2 text-xs text-slate-500">PostgreSQL Database</p>
-              <DbBadge status={dbStatus} />
-              {dbStatus === 'unavailable' && (
-                <p className="mt-2 text-xs text-slate-500">
-                  Run <code className="text-indigo-400">docker compose up postgres</code> to start DB
-                </p>
-              )}
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
-              <p className="mb-2 text-xs text-slate-500">Current Phase</p>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 px-3 py-1 text-xs font-semibold text-indigo-400 ring-1 ring-indigo-500/30">
-                <Activity size={12} />
-                Phase 1 — Foundation
-              </span>
-              <p className="mt-2 text-xs text-slate-500">Full UI arrives in Phase 2</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ─── Features Grid ──────────────────────────────────────────────── */}
-        <div className="mb-16">
-          <h2 className="mb-6 text-lg font-semibold text-slate-200">Planned Capabilities</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <FeatureCard key={f.title} {...f} />
-            ))}
-          </div>
-        </div>
-
-        {/* ─── Demo Scenario ──────────────────────────────────────────────── */}
-        <div className="mb-16 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur">
-          <h2 className="mb-6 text-sm font-semibold uppercase tracking-wide text-slate-400">
-            Canonical Demo Scenario
-          </h2>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            {[
-              { date: 'Jan 1', label: 'Coverage begins', color: 'emerald', detail: 'BMW X3 · DEMO-VIN-001' },
-              { date: 'Jan 10', label: 'Date of Loss', color: 'red', detail: 'Accident occurs' },
-              { date: 'Jan 15', label: 'Vehicle removed', color: 'amber', detail: 'Coverage closed' },
-              { date: 'Feb 10', label: 'Claim filed', color: 'indigo', detail: 'Looks up Jan 10 coverage' },
-            ].map((event, i) => (
-              <div key={event.date} className="flex flex-1 items-start gap-3">
-                {i > 0 && (
-                  <div className="mt-5 hidden h-px flex-1 bg-gradient-to-r from-slate-700 to-slate-700 sm:block" />
-                )}
-                <div className="min-w-0 flex-1 sm:flex-none">
-                  <div
-                    className={`mb-1 inline-block rounded-lg px-3 py-1 text-xs font-bold ${
-                      event.color === 'emerald'
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : event.color === 'red'
-                          ? 'bg-red-500/20 text-red-400'
-                          : event.color === 'amber'
-                            ? 'bg-amber-500/20 text-amber-400'
-                            : 'bg-indigo-500/20 text-indigo-400'
+            <nav className="space-y-1">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.key
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setActiveTab(item.key)
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className={`w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-indigo-600/15 text-indigo-300 ring-1 ring-indigo-500/30'
+                        : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                     }`}
                   >
-                    {event.date}
-                  </div>
-                  <p className="text-sm font-medium text-slate-200">{event.label}</p>
-                  <p className="text-xs text-slate-500">{event.detail}</p>
-                </div>
-              </div>
-            ))}
+                    <div className="flex items-center gap-2.5">
+                      <span className={isActive ? 'text-indigo-400' : 'text-slate-500'}>
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-mono ${
+                          isActive
+                            ? 'bg-indigo-500/30 text-indigo-200'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </nav>
           </div>
-          <div className="mt-6 rounded-xl bg-indigo-500/10 p-4 ring-1 ring-indigo-500/20">
-            <p className="text-sm text-indigo-300">
-              <strong>Expected result:</strong> Historical coverage is found for January 10, even though the vehicle
-              was removed on January 15 and the claim was filed on February 10. Coverage is evaluated using the{' '}
-              <strong>date of loss</strong>, not the claim filing date.
-            </p>
-          </div>
-        </div>
 
-        {/* ─── Disclaimer ─────────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-4 text-center">
-          <p className="text-xs text-slate-500">
-            ⚠️ Concept prototype built as a product and engineering thought exercise. Uses synthetic data only
-            and does not represent any company's production architecture.
-          </p>
-        </div>
-      </main>
+          {/* Quick Canonical Scenario Widget in Sidebar */}
+          <div className="rounded-xl border border-slate-800/80 bg-slate-900/50 p-3.5 space-y-2 text-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              Demo Context
+            </div>
+            <div className="text-slate-200 font-semibold">{state.policy.customer_name}</div>
+            <div className="font-mono text-[11px] text-slate-400">{state.policy.policy_number}</div>
+            <div className="pt-1 text-[11px] text-slate-400 space-y-1">
+              <div>
+                Vehicle:{' '}
+                <span className="text-slate-300">
+                  {pastVehiclesCount > 0 ? 'BMW X3 (Past)' : 'BMW X3 (Active)'}
+                </span>
+              </div>
+              <div>
+                Removal:{' '}
+                <span className={pastVehiclesCount > 0 ? 'text-amber-400' : 'text-slate-400'}>
+                  {pastVehiclesCount > 0 ? 'Jan 15, 2026' : 'Not removed yet'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 sm:p-8 min-w-0">
+          {activeTab === 'overview' && (
+            <OverviewPage state={state} onNavigate={(tab) => setActiveTab(tab as TabKey)} />
+          )}
+          {activeTab === 'policy' && (
+            <PolicyPage
+              state={state}
+              setState={setState}
+              onNavigate={(tab) => setActiveTab(tab as TabKey)}
+              showToast={showToast}
+            />
+          )}
+          {activeTab === 'claim' && (
+            <FileClaimPage
+              state={state}
+              setState={setState}
+              onNavigate={(tab) => setActiveTab(tab as TabKey)}
+              showToast={showToast}
+            />
+          )}
+          {activeTab === 'coverage' && <CoverageHistoryPage state={state} />}
+          {activeTab === 'audit' && <AuditTrailPage state={state} />}
+          {activeTab === 'architecture' && <ArchitecturePage />}
+        </main>
+      </div>
+
+      {/* ─── Persistent Unobtrusive Disclaimer ──────────────────────────────────── */}
+      <footer className="border-t border-slate-900 bg-slate-950 px-4 py-3 text-center text-xs text-slate-400">
+        Concept prototype built as a product and engineering thought exercise. Uses synthetic data only and does not represent any company's production architecture.
+      </footer>
+
+      {/* Reset Confirmation Modal */}
+      <ResetConfirmModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onConfirm={handleResetConfirm}
+      />
+
+      {/* Global Toast Notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }
+
+export function App() {
+  return (
+    <DemoProvider>
+      <MainApp />
+    </DemoProvider>
+  )
+}
+
+export default App
