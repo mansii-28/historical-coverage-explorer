@@ -1,0 +1,55 @@
+# ─── Environment ────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyo
+
+# ─── Virtual environments ────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ─── Node / Frontend ────────────────────────────────────────────────────────────
+node_modules/
+*.local
+
+# ─── Vite / Build ───────────────────────────────────────────────────────────────
+apps/frontend/dist/
+apps/frontend/.vite/
+
+# ─── macOS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ─── Editors ────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── Logs / Evidence outputs ────────────────────────────────────────────────────
+*.log
+evidence/screenshots/
+evidence/*.txt
+evidence/*.jsonl
+
+# ─── Generated PDFs ─────────────────────────────────────────────────────────────
+*.pdf
