@@ -40,7 +40,7 @@ React + TypeScript + Vite (frontend)
          │  HTTP / REST
 FastAPI + SQLAlchemy 2.x (backend)
          │  PostgreSQL driver (psycopg)
-PostgreSQL 16 (database)
+PostgreSQL 14+ (database; Docker Compose targets 16)
 ```
 
 All services are orchestrated with Docker Compose.
@@ -53,7 +53,7 @@ All services are orchestrated with Docker Compose.
 |-------|-----------|
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS |
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2.x, Alembic |
-| Database | PostgreSQL 16 |
+| Database | PostgreSQL 14+ (validated locally on 14; Docker Compose targets 16) |
 | PDF | ReportLab (Phase 3) |
 | Testing | pytest, Vitest, Playwright (Phase 4) |
 | Containerization | Docker, Docker Compose |
@@ -77,7 +77,7 @@ Services:
 
 ### Local development (without Docker)
 
-**Prerequisites:** Python 3.12+, Node 22+, PostgreSQL 16
+**Prerequisites:** Python 3.12+, Node 22+, PostgreSQL 14+
 
 ```bash
 # 1. Install all dependencies
@@ -138,15 +138,24 @@ historical-coverage-explorer/
 |-------|--------|-------------|
 | **Phase 1** | ✅ Complete | Repository, docs, architecture, foundation |
 | **Phase 2** | ✅ Complete | Frontend product design, interactive workflows, mock services |
-| Phase 3 | ⏳ Pending | Backend, database, full integration |
+| **Phase 3** | ✅ Complete | Backend, PostgreSQL 14+, APIs, domain logic, PDF, full frontend integration |
 | Phase 4 | ⏳ Pending | Tests, observability, evidence |
 | Phase 5 | ⏳ Pending | Handoff and demo package |
 
 ---
 
-## Phase 2 Screenshots
+## Phase 3 Screenshots (Live PostgreSQL & FastAPI Integration)
 
-The interactive frontend has been fully verified and captured in `evidence/screenshots/`:
+Live system integration has been fully verified and captured in `evidence/screenshots/`:
+
+| Screenshot | Description |
+|---|---|
+| `11-live-api-policy.png` | Live Policy view backed by PostgreSQL, showing canonical active 2024 BMW X3 |
+| `12-live-api-covered-claim.png` | Live claim creation with date of loss Jan 10 pinned to Coverage Version 1 |
+| `13-live-api-manual-review.png` | Live claim submission for Jan 20 routed to REQUIRES_MANUAL_REVIEW |
+| `14-live-audit-events.png` | Live immutable audit trail querying PostgreSQL JSONB domain events |
+
+### Phase 2 Reference Screenshots
 
 | Screenshot | Description |
 |---|---|
@@ -191,6 +200,8 @@ make test-backend # Run pytest with coverage (Phase 4)
 | [Data Model](docs/04-data-model.md) | Domain model and schema |
 | [API Contract](docs/05-api-contract.md) | Endpoint documentation |
 | [Frontend Design](docs/06-frontend-design.md) | Frontend architecture, design system, and mock abstraction |
+| [Backend Integration](docs/07-backend-integration.md) | Backend architecture, database schema, transactions, domain logic & PDF |
+| [Phase 3 Validation Evidence](evidence/phase-3-validation.md) | Verification logs, database query evidence, browser persistence proof |
 | [Project Plan](docs/PROJECT_PLAN.md) | Five-phase implementation plan |
 | [Assumptions](docs/ASSUMPTIONS_AND_OPEN_QUESTIONS.md) | Known assumptions and open questions |
 | [ADR-001](docs/decisions/ADR-001-effective-dated-history.md) | Why effective-dated records, not cache |
@@ -198,6 +209,8 @@ make test-backend # Run pytest with coverage (Phase 4)
 | [ADR-003](docs/decisions/ADR-003-claim-coverage-pinning.md) | Why claims pin to a coverage version |
 | [ADR-004](docs/decisions/ADR-004-deterministic-coverage.md) | Why no AI for coverage decisions |
 | [ADR-005](docs/decisions/ADR-005-audit-vs-logs.md) | Why audit events and app logs are separate |
+| [ADR-006](docs/decisions/ADR-006-date-only-effective-coverage-boundaries.md) | Half-open date intervals and application overlap validation |
+| [ADR-007](docs/decisions/ADR-007-historical-delete-protection.md) | Restrictive foreign keys and historical deletion protection |
 
 ---
 

@@ -42,12 +42,20 @@ down: ## Stop all Docker Compose services
 down-v: ## Stop all services and remove volumes (destroys DB data)
 	docker compose down -v
 
-# ─── Database ──────────────────────────────────────────────────────────────────
+# ─── Database & Seed ───────────────────────────────────────────────────────────
 db-upgrade: ## Run Alembic migrations
 	@cd $(BACKEND_DIR) && PYTHONPATH=. .venv/bin/alembic upgrade head
 
+migrate: db-upgrade ## Alias for db-upgrade
+
 db-revision: ## Create a new Alembic migration (usage: make db-revision MSG="describe change")
 	@cd $(BACKEND_DIR) && PYTHONPATH=. .venv/bin/alembic revision --autogenerate -m "$(MSG)"
+
+reset-demo: ## Reset demo database to canonical baseline via API
+	@echo "→ Resetting demo database to canonical baseline..."
+	@curl -s -X POST http://localhost:8000/api/demo/reset | jq . || curl -s -X POST http://localhost:8000/api/demo/reset
+
+seed: reset-demo ## Alias for reset-demo
 
 # ─── Linting / Formatting ──────────────────────────────────────────────────────
 lint: ## Lint backend (ruff) and frontend (eslint)

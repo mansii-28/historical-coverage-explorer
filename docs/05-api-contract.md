@@ -2,9 +2,9 @@
 
 > **Prototype:** Historical Coverage Explorer
 > **Document:** docs/05-api-contract.md
-> **Status:** Phase 1
+> **Status:** Phase 3 Complete (All endpoints live against FastAPI + PostgreSQL)
 
-Legend: ✅ Implemented | 🔜 Planned (Phase 3)
+Legend: ✅ Implemented & Verified
 
 ---
 
@@ -42,17 +42,18 @@ Returns service health including database connectivity.
 
 ## Demo Reset
 
-### `POST /api/demo/reset` 🔜
+### `POST /api/demo/reset` ✅
 
-Drops and re-seeds all demo data. Returns the canonical Jordan Lee scenario in a fresh state.
+Drops and re-seeds all demo data with sequence restart. Supports query param `scenario=canonical` (default) or `scenario=versioned`. Returns canonical baseline state.
 
 **Response 200:**
 ```json
 {
-  "message": "Demo data reset successfully.",
+  "message": "Demo state successfully reset to canonical baseline.",
   "policy_id": 1,
   "vehicle_id": 1,
-  "coverage_version_id": 1
+  "coverage_version_id": 1,
+  "scenario": "canonical"
 }
 ```
 
@@ -60,7 +61,7 @@ Drops and re-seeds all demo data. Returns the canonical Jordan Lee scenario in a
 
 ## Policies
 
-### `GET /api/policies/{policy_id}` 🔜
+### `GET /api/policies/{policy_id}` ✅
 
 Returns full policy details.
 
@@ -80,7 +81,7 @@ Returns full policy details.
 
 ## Vehicles
 
-### `GET /api/policies/{policy_id}/vehicles` 🔜
+### `GET /api/policies/{policy_id}/vehicles` ✅
 
 Returns vehicles on the policy.
 
@@ -105,11 +106,11 @@ Query params:
 ]
 ```
 
-### `GET /api/vehicles/{vehicle_id}` 🔜
+### `GET /api/vehicles/{vehicle_id}` ✅
 
 Returns a single vehicle by ID (regardless of removed status).
 
-### `POST /api/vehicles/{vehicle_id}/remove` 🔜
+### `POST /api/vehicles/{vehicle_id}/remove` ✅
 
 Removes a vehicle from the active policy. Transactionally:
 1. Sets `vehicle.removed_at = effective_date`
@@ -142,7 +143,7 @@ Removes a vehicle from the active policy. Transactionally:
 
 ## Coverage
 
-### `GET /api/vehicles/{vehicle_id}/coverage-history` 🔜
+### `GET /api/vehicles/{vehicle_id}/coverage-history` ✅
 
 Returns all coverage versions for a vehicle, ordered by `valid_from`.
 
@@ -163,7 +164,7 @@ Returns all coverage versions for a vehicle, ordered by `valid_from`.
 ]
 ```
 
-### `GET /api/vehicles/{vehicle_id}/coverage?as_of=2026-01-10` 🔜
+### `GET /api/vehicles/{vehicle_id}/coverage?as_of=2026-01-10` ✅
 
 Returns the single coverage version active on the given date, or 404 if none.
 
@@ -172,7 +173,7 @@ Uses the query:
 valid_from <= as_of AND (valid_to IS NULL OR as_of < valid_to)
 ```
 
-### `POST /api/coverage/check` 🔜
+### `POST /api/coverage/check` ✅
 
 Performs a historical coverage lookup without creating a claim.
 
@@ -203,7 +204,7 @@ Performs a historical coverage lookup without creating a claim.
 
 ## Claims
 
-### `POST /api/claims` 🔜
+### `POST /api/claims` ✅
 
 Creates a claim. Performs historical coverage lookup using `date_of_loss`.
 
@@ -238,7 +239,7 @@ Creates a claim. Performs historical coverage lookup using `date_of_loss`.
 - `NO_COVERAGE_FOUND` — Lookup returned no result (reserved for future use)
 - `REQUIRES_MANUAL_REVIEW` — No automated match; `coverage_version_id` is NULL; claim proceeds for human review
 
-### `GET /api/claims/{claim_id}` 🔜
+### `GET /api/claims/{claim_id}` ✅
 
 Returns a single claim with its pinned coverage version.
 
@@ -246,7 +247,7 @@ Returns a single claim with its pinned coverage version.
 
 ## Audit
 
-### `GET /api/policies/{policy_id}/audit-events` 🔜
+### `GET /api/policies/{policy_id}/audit-events` ✅
 
 Returns all audit events for a policy, ordered by `event_timestamp` ascending.
 
@@ -270,7 +271,7 @@ Returns all audit events for a policy, ordered by `event_timestamp` ascending.
 
 ## Proof of Insurance
 
-### `GET /api/coverage/{coverage_version_id}/proof.pdf` 🔜
+### `GET /api/coverage/{coverage_version_id}/proof.pdf` ✅
 
 Returns a DEMO ONLY PDF proof-of-insurance document for the given coverage version.
 

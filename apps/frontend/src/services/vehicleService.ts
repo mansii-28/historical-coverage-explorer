@@ -1,37 +1,38 @@
 // ─── Vehicle Service ──────────────────────────────────────────────────────────
 // All interactions with Vehicle data go through this service.
-// Phase 3 will replace mock implementations with real HTTP calls to:
-//   GET  /api/policies/{policy_id}/vehicles?include_removed=true|false
-//   POST /api/vehicles/{vehicle_id}/remove
+// Real HTTP calls to FastAPI /api/vehicles and /api/policies endpoints.
 
 import type { Vehicle, VehicleRemovalResult, DemoState, AuditEvent } from '../types/domain'
-
-const MOCK_DELAY_MS = 300
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+import { apiFetch, USE_MOCK } from './apiClient'
+import { getAuditEvents } from './auditService'
 
 // GET /api/policies/{policy_id}/vehicles?include_removed=false
-export async function getActiveVehicles(state: DemoState): Promise<Vehicle[]> {
-  await delay(MOCK_DELAY_MS)
-  return state.vehicles.filter((v) => v.is_active).map((v) => ({ ...v }))
+export async function getActiveVehicles(state?: DemoState, policyId: number = 1): Promise<Vehicle[]> {
+  if (USE_MOCK && state) {
+    return state.vehicles.filter((v) => v.is_active).map((v) => ({ ...v }))
+  }
+  return apiFetch<Vehicle[]>(`/api/policies/${policyId}/vehicles?include_removed=false`)
 }
 
 // GET /api/policies/{policy_id}/vehicles?include_removed=true
-export async function getAllVehicles(state: DemoState): Promise<Vehicle[]> {
-  await delay(MOCK_DELAY_MS)
-  return state.vehicles.map((v) => ({ ...v }))
+export async function getAllVehicles(state?: DemoState, policyId: number = 1): Promise<Vehicle[]> {
+  if (USE_MOCK && state) {
+    return state.vehicles.map((v) => ({ ...v }))
+  }
+  return apiFetch<Vehicle[]>(`/api/policies/${policyId}/vehicles?include_removed=true`)
 }
 
 // GET /api/policies/{policy_id}/vehicles (historical only)
-export async function getHistoricalVehicles(state: DemoState): Promise<Vehicle[]> {
-  await delay(MOCK_DELAY_MS)
-  return state.vehicles.filter((v) => !v.is_active).map((v) => ({ ...v }))
+export async function getHistoricalVehicles(state?: DemoState, policyId: number = 1): Promise<Vehicle[]> {
+  if (USE_MOCK && state) {
+    return state.vehicles.filter((v) => !v.is_active).map((v) => ({ ...v }))
+  }
+  const vehicles = await getAllVehicles(state, policyId)
+  return vehicles.filter((v) => !v.is_active)
 }
 
 // POST /api/vehicles/{vehicle_id}/remove
-// Returns the result and the new audit events to append.
+// Returns the result, updated vehicle, updated coverage version ID, and newly emitted audit events.
 export async function removeVehicle(
   state: DemoState,
   vehicleId: number,
@@ -42,75 +43,91 @@ export async function removeVehicle(
   updatedCoverageVersionId: number
   auditEvents: Omit<AuditEvent, 'id'>[]
 }> {
-  await delay(MOCK_DELAY_MS)
+  if (USE_MOCK) {
+    const vehicle = state.vehicles.find((v) => v.id === vehicleId)
+    if (!vehicle) throw new Error('Vehicle not found')
+    if (!vehicle.is_active) throw new Error('Vehicle is already removed')
 
-  const vehicle = state.vehicles.find((v) => v.id === vehicleId)
-  if (!vehicle) throw new Error('Vehicle not found')
-  if (!vehicle.is_active) throw new Error('Vehicle is already removed')
+    const activeCoverage = state.coverageVersions.find(
+      (cv) => cv.vehicle_id === vehicleId && cv.valid_to === null,
+    )
+    if (!activeCoverage) throw new Error('No active coverage version found')
 
-  // Find the currently active coverage version for this vehicle
-  const activeCoverage = state.coverageVersions.find(
-    (cv) => cv.vehicle_id === vehicleId && cv.valid_to === null,
-  )
-  if (!activeCoverage) throw new Error('No active coverage version found')
+    const now = new Date().toISOString()
+    const updatedVehicle: Vehicle = {
+      ...vehicle,
+      removed_at: effectiveDate,
+      is_active: false,
+    }
 
-  const now = new Date().toISOString()
-
-  const updatedVehicle: Vehicle = {
-    ...vehicle,
-    removed_at: effectiveDate,
-    is_active: false,
-    updated_at: now,
-  } as Vehicle & { updated_at: string }
-
-  const auditEvents: Omit<AuditEvent, 'id'>[] = [
-    {
-      policy_id: vehicle.policy_id,
-      vehicle_id: vehicle.id,
-      claim_id: null,
-      event_type: 'VEHICLE_REMOVAL_REQUESTED',
-      event_timestamp: now,
-      metadata_json: { vehicle_id: vehicleId, effective_date: effectiveDate },
-      created_at: now,
-      category: 'vehicle',
-      human_label: 'Vehicle Removal Requested',
-    },
-    {
-      policy_id: vehicle.policy_id,
-      vehicle_id: vehicle.id,
-      claim_id: null,
-      event_type: 'VEHICLE_REMOVED',
-      event_timestamp: new Date(new Date(now).getTime() + 100).toISOString(),
-      metadata_json: { vehicle_id: vehicleId, removed_at: effectiveDate },
-      created_at: now,
-      category: 'vehicle',
-      human_label: 'Vehicle Removed',
-    },
-    {
-      policy_id: vehicle.policy_id,
-      vehicle_id: vehicle.id,
-      claim_id: null,
-      event_type: 'COVERAGE_CLOSED',
-      event_timestamp: new Date(new Date(now).getTime() + 200).toISOString(),
-      metadata_json: {
-        coverage_version_id: activeCoverage.id,
-        valid_to: effectiveDate,
+    const auditEvents: Omit<AuditEvent, 'id'>[] = [
+      {
+        policy_id: vehicle.policy_id,
+        vehicle_id: vehicle.id,
+        claim_id: null,
+        event_type: 'VEHICLE_REMOVAL_REQUESTED',
+        event_timestamp: now,
+        metadata_json: { vehicle_id: vehicleId, effective_date: effectiveDate },
+        created_at: now,
+        category: 'vehicle',
+        human_label: 'Vehicle Removal Requested',
       },
-      created_at: now,
-      category: 'coverage',
-      human_label: 'Coverage Closed',
-    },
-  ]
+      {
+        policy_id: vehicle.policy_id,
+        vehicle_id: vehicle.id,
+        claim_id: null,
+        event_type: 'VEHICLE_REMOVED',
+        event_timestamp: new Date(new Date(now).getTime() + 100).toISOString(),
+        metadata_json: { vehicle_id: vehicleId, removed_at: effectiveDate },
+        created_at: now,
+        category: 'vehicle',
+        human_label: 'Vehicle Removed',
+      },
+      {
+        policy_id: vehicle.policy_id,
+        vehicle_id: vehicle.id,
+        claim_id: null,
+        event_type: 'COVERAGE_CLOSED',
+        event_timestamp: new Date(new Date(now).getTime() + 200).toISOString(),
+        metadata_json: {
+          coverage_version_id: activeCoverage.id,
+          valid_to: effectiveDate,
+        },
+        created_at: now,
+        category: 'coverage',
+        human_label: 'Coverage Closed',
+      },
+    ]
+
+    return {
+      result: {
+        message: 'Vehicle removed successfully.',
+        vehicle_id: vehicleId,
+        removed_at: effectiveDate,
+        closed_coverage_version_id: activeCoverage.id,
+      },
+      updatedVehicle,
+      updatedCoverageVersionId: activeCoverage.id,
+      auditEvents,
+    }
+  }
+
+  // ─── Real Backend Call ───────────────────────────────────────────────────
+  const removalResponse = await apiFetch<VehicleRemovalResult>(`/api/vehicles/${vehicleId}/remove`, {
+    method: 'POST',
+    body: JSON.stringify({ effective_date: effectiveDate }),
+  })
+
+  // Load updated vehicle from server
+  const updatedVehicle = await apiFetch<Vehicle>(`/api/vehicles/${vehicleId}`)
+
+  // Retrieve updated audit events for policy
+  const allAuditEvents = await getAuditEvents(state)
 
   return {
-    result: {
-      message: 'Vehicle removed successfully.',
-      vehicle_id: vehicleId,
-      removed_at: effectiveDate,
-      closed_coverage_version_id: activeCoverage.id,
-    },
+    result: removalResponse,
     updatedVehicle,
-    updatedCoverageVersionId: activeCoverage.id,
-    auditEvents,
+    updatedCoverageVersionId: removalResponse.closed_coverage_version_id,
+    auditEvents: allAuditEvents,
   }
 }

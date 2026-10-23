@@ -66,20 +66,30 @@
 ## Phase 3 — Backend, Database, APIs, and Full Integration
 **Goal:** Replace mock behavior with real persistence and deterministic historical lookup.
 
-Key deliverables:
-- ORM models (Policy, Vehicle, CoverageVersion, Claim, AuditEvent)
-- Alembic migration (initial schema)
-- Demo seed/reset endpoint
-- Vehicle removal transaction (atomic)
-- Effective-dated coverage lookup
-- Claim creation with coverage pinning
-- Manual review path
-- Audit event recording
-- Proof-of-insurance PDF (ReportLab, DEMO ONLY)
-- Frontend/backend integration
-- Complete canonical demo scenario
+| # | Deliverable | Status |
+|---|-------------|--------|
+| 1 | Real SQLAlchemy 2.x models (Policy, Vehicle, CoverageVersion, Claim, AuditEvent) | ✅ |
+| 2 | PostgreSQL 14+ database and Alembic migration (`create_initial_schema`) | ✅ |
+| 3 | Check constraint `valid_to IS NULL OR valid_to > valid_from` & indexes | ✅ |
+| 4 | Deterministic canonical demo reset endpoint (`POST /api/demo/reset`) with table truncation & sequence restart | ✅ |
+| 5 | Atomic vehicle removal transaction (`POST /api/vehicles/{id}/remove`) with soft-delete & coverage closure | ✅ |
+| 6 | Point-in-time deterministic coverage lookup service & endpoints (`GET /api/vehicles/{id}/coverage`, `POST /api/coverage/check`) | ✅ |
+| 7 | Coverage history endpoint (`GET /api/vehicles/{id}/coverage-history`) | ✅ |
+| 8 | Claim creation service (`POST /api/claims`) with date-of-loss lookup & coverage version pinning | ✅ |
+| 9 | Uncovered claim routing to `REQUIRES_MANUAL_REVIEW` / `MANUAL_REVIEW` (no automated denial) | ✅ |
+| 10 | Immutable domain audit events service & endpoints (`GET /api/policies/{id}/audit-events`) with JSONB metadata | ✅ |
+| 11 | Version-specific proof-of-insurance PDF generator (`GET /api/coverage/{id}/proof.pdf`) via ReportLab with watermark & disclaimer | ✅ |
+| 12 | Frontend service abstraction integration (`policyService`, `vehicleService`, `coverageService`, `claimService`, `auditService`) calling real FastAPI endpoints | ✅ |
+| 13 | Explicit API mode with error banner and retry UI; zero silent fallbacks to mocks | ✅ |
+| 14 | Proof-of-insurance modal updated to download live PDF from API | ✅ |
+| 15 | Canonical end-to-end browser walkthrough verified against live PostgreSQL | ✅ |
+| 16 | Browser reload persistence tests verified (vehicles, claims, audit trail preserved across reloads) | ✅ |
+| 17 | Database state verified with PostgreSQL CLI and saved to `evidence/database/` | ✅ |
+| 18 | Live API screenshots saved to `evidence/screenshots/11-14` | ✅ |
+| 19 | Zero linter errors (`ruff check .` & `oxlint src/`), clean TypeScript build | ✅ |
+| 20 | Comprehensive backend integration documentation (`docs/07-backend-integration.md`) & ADR-006 | ✅ |
 
-**Status:** NOT STARTED — awaiting authorization
+**Status:** ✅ COMPLETE
 
 ---
 

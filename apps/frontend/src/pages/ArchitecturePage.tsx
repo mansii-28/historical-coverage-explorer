@@ -86,7 +86,7 @@ export function ArchitecturePage() {
                 Phase 1 Ready &rarr; Phase 3 Domain Models
               </span>
             </div>
-            <div className="text-sm font-semibold text-slate-200">PostgreSQL 16 (Temporal Schema)</div>
+            <div className="text-sm font-semibold text-slate-200">PostgreSQL 14+ (Temporal Schema)</div>
             <p className="text-[11px] text-slate-400 mt-1">
               Effective-dated tables (valid_from/valid_to), soft-deletion flags, and immutable audit logs.
             </p>

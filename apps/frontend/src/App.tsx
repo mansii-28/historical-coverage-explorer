@@ -12,6 +12,8 @@ import {
   RotateCcw,
   Menu,
   X,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 import { DemoProvider } from './context/DemoContext'
 import { useDemoContext } from './context/useDemoContext'
@@ -24,6 +26,7 @@ import { FileClaimPage } from './pages/FileClaimPage'
 import { CoverageHistoryPage } from './pages/CoverageHistoryPage'
 import { AuditTrailPage } from './pages/AuditTrailPage'
 import { ArchitecturePage } from './pages/ArchitecturePage'
+import { USE_MOCK } from './services/apiClient'
 
 type TabKey = 'overview' | 'policy' | 'claim' | 'coverage' | 'audit' | 'architecture'
 
@@ -35,7 +38,7 @@ interface NavItem {
 }
 
 function MainApp() {
-  const { state, setState, resetDemo } = useDemoContext()
+  const { state, setState, resetDemo, isLoading, error, reloadState } = useDemoContext()
   const { toasts, addToast, dismissToast } = useToast()
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [isResetModalOpen, setIsResetModalOpen] = useState(false)
@@ -49,9 +52,13 @@ function MainApp() {
     addToast(variant as ToastType, title, message)
   }
 
-  const handleResetConfirm = () => {
-    resetDemo()
-    showToast('Demo State Reset', 'Restored to canonical baseline: BMW X3 active, zero claims.', 'info')
+  const handleResetConfirm = async () => {
+    try {
+      await resetDemo()
+      showToast('Demo State Reset', 'Restored to canonical baseline: BMW X3 active, zero claims.', 'info')
+    } catch {
+      showToast('Reset Failed', 'Failed to reset demo state against backend.', 'error')
+    }
   }
 
   const activeVehiclesCount = state.vehicles.filter((v) => v.is_active).length
@@ -133,7 +140,7 @@ function MainApp() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span className="text-slate-300 font-medium text-[11px]">
-                Phase 2 Mock Services Active
+                {USE_MOCK ? 'Mock Services Active' : 'FastAPI + PostgreSQL Live'}
               </span>
             </div>
 
@@ -146,15 +153,36 @@ function MainApp() {
             <button
               type="button"
               onClick={() => setIsResetModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors shadow-sm"
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors shadow-sm disabled:opacity-50"
               title="Reset the demo to initial canonical state"
             >
-              <RotateCcw size={13} className="text-indigo-400" />
+              <RotateCcw size={13} className={`text-indigo-400 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Reset Demo</span>
             </button>
           </div>
         </div>
       </header>
+
+      {/* Backend Connection Error Banner */}
+      {error && (
+        <div className="bg-red-500/15 border-b border-red-500/30 px-4 py-2.5 text-xs text-red-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={15} className="text-red-400 shrink-0" />
+            <span>{error}</span>
+          </div>
+          {reloadState && (
+            <button
+              type="button"
+              onClick={() => reloadState()}
+              className="inline-flex items-center gap-1.5 rounded bg-red-500/25 hover:bg-red-500/40 px-2.5 py-1 text-[11px] font-semibold text-red-200 transition-colors"
+            >
+              <RefreshCw size={12} />
+              Retry Connection
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ─── Main Body Container ─────────────────────────────────────────────────── */}
       <div className="flex-1 flex mx-auto w-full max-w-7xl">

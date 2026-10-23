@@ -1,18 +1,14 @@
 // ─── Policy Service ───────────────────────────────────────────────────────────
 // All interactions with Policy data go through this service.
-// Phase 3 will replace mock implementations with real HTTP calls.
+// Real HTTP calls to FastAPI /api/policies endpoints with mock fallback.
 
-import type { Policy } from '../types/domain'
-import type { DemoState } from '../types/domain'
-
-const MOCK_DELAY_MS = 300
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+import type { Policy, DemoState } from '../types/domain'
+import { apiFetch, USE_MOCK } from './apiClient'
 
 // GET /api/policies/{policy_id}
-export async function getPolicy(state: DemoState): Promise<Policy> {
-  await delay(MOCK_DELAY_MS)
-  return { ...state.policy }
+export async function getPolicy(state?: DemoState, policyId: number = 1): Promise<Policy> {
+  if (USE_MOCK && state) {
+    return { ...state.policy }
+  }
+  return apiFetch<Policy>(`/api/policies/${policyId}`)
 }

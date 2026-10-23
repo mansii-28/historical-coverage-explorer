@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routers import health
+from app.api.routers import claims, coverage, demo, health, policies, vehicles
 from app.core.config import settings
 from app.db.session import check_db_connection
 
@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     # Startup
     await check_db_connection()
     yield
-    # Shutdown (nothing to clean up in Phase 1)
+    # Shutdown
 
 
 app = FastAPI(
@@ -49,3 +49,8 @@ app.add_middleware(
 
 # ─── Routers ─────────────────────────────────────────────────────────────────
 app.include_router(health.router)
+app.include_router(demo.router)
+app.include_router(policies.router)
+app.include_router(vehicles.router)
+app.include_router(coverage.router)
+app.include_router(claims.router)

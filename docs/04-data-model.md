@@ -2,7 +2,7 @@
 
 > **Prototype:** Historical Coverage Explorer
 > **Document:** docs/04-data-model.md
-> **Status:** Phase 1 (proposed — not yet implemented in DB)
+> **Status:** Phase 3 (Implemented in PostgreSQL 14+ via Alembic migration `e1aeef35ef22`; validated locally on 14; Docker Compose targets 16)
 
 ---
 

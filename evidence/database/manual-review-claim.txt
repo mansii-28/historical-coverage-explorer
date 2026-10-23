@@ -1,0 +1,13 @@
+-[ RECORD 1 ]----------------+------------------------------
+id                           | 2
+claim_number                 | DEMO-CLM-0002
+policy_id                    | 1
+vehicle_id                   | 1
+date_of_loss                 | 2026-01-20
+filed_at                     | 2026-02-09 17:00:00-07
+coverage_version_id          | 
+coverage_verification_status | REQUIRES_MANUAL_REVIEW
+status                       | MANUAL_REVIEW
+created_at                   | 2026-10-23 15:53:19.702689-07
+updated_at                   | 2026-10-23 15:53:19.702695-07
+

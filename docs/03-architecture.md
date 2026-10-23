@@ -2,7 +2,7 @@
 
 > **Prototype:** Historical Coverage Explorer
 > **Document:** docs/03-architecture.md
-> **Status:** Phase 1
+> **Status:** Phase 3 Complete
 
 ---
 
@@ -12,42 +12,13 @@ The Historical Coverage Explorer is a monorepo prototype with three layers:
 
 1. **Frontend** — React + TypeScript + Vite SPA
 2. **Backend** — Python FastAPI REST API
-3. **Database** — PostgreSQL 16
+3. **Database** — PostgreSQL 14+ (psycopg async driver, SQLAlchemy 2.x; validated locally on 14; Docker Compose targets 16)
 
-All three run locally via Docker Compose.
-
----
-
-## System Diagram (Implemented — Phase 1)
-
-```mermaid
-flowchart TD
-    subgraph Client["Browser"]
-        FE["React + TypeScript\n(Vite, Tailwind CSS)"]
-    end
-
-    subgraph Backend["FastAPI Application (Python 3.12)"]
-        direction TB
-        MAIN["main.py\n(app, CORS, lifespan)"]
-        ROUTER["api/routers/health.py\nGET /health"]
-        CONFIG["core/config.py\npydantic-settings"]
-        DBSESS["db/session.py\nSQLAlchemy async engine"]
-    end
-
-    subgraph Database["PostgreSQL 16"]
-        PG[("historical_coverage\ndatabase")]
-    end
-
-    FE -- "HTTP fetch" --> MAIN
-    MAIN --> ROUTER
-    ROUTER --> DBSESS
-    CONFIG --> DBSESS
-    DBSESS -- "psycopg (async)" --> PG
-```
+All three run locally via Docker Compose or natively via Makefile.
 
 ---
 
-## System Diagram (Proposed — Phase 3+)
+## Implemented Architecture (Phase 3)
 
 ```mermaid
 flowchart TD
@@ -84,7 +55,7 @@ flowchart TD
         end
     end
 
-    subgraph Database["PostgreSQL 16"]
+    subgraph Database["PostgreSQL 14+"]
         PG[("historical_coverage")]
     end
 
@@ -165,7 +136,7 @@ sequenceDiagram
 
 ### Database
 
-PostgreSQL 16 managed by Docker Compose. Migrations via Alembic.
+PostgreSQL 14+ (validated locally on PostgreSQL 14; Docker Compose targets PostgreSQL 16). Migrations via Alembic.
 
 ---
 

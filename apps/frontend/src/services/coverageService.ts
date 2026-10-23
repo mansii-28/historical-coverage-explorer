@@ -1,48 +1,42 @@
 // ─── Coverage Service ─────────────────────────────────────────────────────────
 // All interactions with coverage data go through this service.
-// Phase 3 will replace mock implementations with real HTTP calls to:
-//   GET  /api/vehicles/{vehicle_id}/coverage-history
-//   GET  /api/vehicles/{vehicle_id}/coverage?as_of={date}
-//   POST /api/coverage/check
+// Real HTTP calls to FastAPI /api/coverage and /api/vehicles coverage endpoints.
 
 import type { CoverageVersion, CoverageLookupResult, DemoState, AuditEvent } from '../types/domain'
 import { ADVANCED_COVERAGE_VERSION_1, ADVANCED_COVERAGE_VERSION_2 } from '../data/fixtures'
+import { apiFetch, USE_MOCK } from './apiClient'
+import { getAuditEvents } from './auditService'
 
-const MOCK_DELAY_MS = 350
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// Evaluates whether a coverage version is active on a given date.
-// Implements: valid_from <= date_of_loss < valid_to (valid_to exclusive)
+// Helper for mock mode interval evaluation
 function isCoverageActiveOnDate(cv: CoverageVersion, dateString: string): boolean {
   const d = new Date(dateString)
   const from = new Date(cv.valid_from)
   const to = cv.valid_to ? new Date(cv.valid_to) : null
 
-  // d >= valid_from
   if (d < from) return false
-  // d < valid_to (if valid_to is set)
   if (to !== null && d >= to) return false
   return true
 }
 
 // GET /api/vehicles/{vehicle_id}/coverage-history
 export async function getCoverageHistory(
-  state: DemoState,
-  vehicleId: number,
+  state?: DemoState,
+  vehicleId: number = 1,
 ): Promise<CoverageVersion[]> {
-  await delay(MOCK_DELAY_MS)
-  return state.coverageVersions
-    .filter((cv) => cv.vehicle_id === vehicleId)
-    .map((cv) => ({ ...cv }))
-    .sort((a, b) => a.valid_from.localeCompare(b.valid_from))
+  if (USE_MOCK && state) {
+    return state.coverageVersions
+      .filter((cv) => cv.vehicle_id === vehicleId)
+      .map((cv) => ({ ...cv }))
+      .sort((a, b) => a.valid_from.localeCompare(b.valid_from))
+  }
+  return apiFetch<CoverageVersion[]>(`/api/vehicles/${vehicleId}/coverage-history`)
 }
 
 // GET /api/vehicles/{vehicle_id}/coverage-history (advanced versioning example)
 export async function getAdvancedCoverageVersions(): Promise<CoverageVersion[]> {
-  await delay(MOCK_DELAY_MS)
+  if (USE_MOCK) {
+    return [{ ...ADVANCED_COVERAGE_VERSION_1 }, { ...ADVANCED_COVERAGE_VERSION_2 }]
+  }
   return [{ ...ADVANCED_COVERAGE_VERSION_1 }, { ...ADVANCED_COVERAGE_VERSION_2 }]
 }
 
@@ -56,62 +50,72 @@ export async function checkCoverage(
   lookup: CoverageLookupResult
   auditEvents: Omit<AuditEvent, 'id'>[]
 }> {
-  await delay(MOCK_DELAY_MS)
+  if (USE_MOCK) {
+    const now = new Date().toISOString()
+    const vehicleCoverages = state.coverageVersions.filter((cv) => cv.vehicle_id === vehicleId)
+    const matched = vehicleCoverages.find((cv) => isCoverageActiveOnDate(cv, dateOfLoss)) ?? null
 
-  const now = new Date().toISOString()
-  const vehicleCoverages = state.coverageVersions.filter((cv) => cv.vehicle_id === vehicleId)
-  const matched = vehicleCoverages.find((cv) => isCoverageActiveOnDate(cv, dateOfLoss)) ?? null
+    const coverageFound = matched !== null
+    const verificationStatus = coverageFound ? 'COVERAGE_FOUND' : 'REQUIRES_MANUAL_REVIEW'
 
-  const coverageFound = matched !== null
-  const verificationStatus = coverageFound ? 'COVERAGE_FOUND' : 'REQUIRES_MANUAL_REVIEW'
-
-  const auditEvents: Omit<AuditEvent, 'id'>[] = [
-    {
-      policy_id: state.policy.id,
-      vehicle_id: vehicleId,
-      claim_id: null,
-      event_type: 'HISTORICAL_COVERAGE_LOOKUP',
-      event_timestamp: now,
-      metadata_json: { vehicle_id: vehicleId, date_of_loss: dateOfLoss },
-      created_at: now,
-      category: 'coverage',
-      human_label: 'Historical Coverage Lookup',
-    },
-    {
-      policy_id: state.policy.id,
-      vehicle_id: vehicleId,
-      claim_id: null,
-      event_type: coverageFound ? 'HISTORICAL_COVERAGE_FOUND' : 'HISTORICAL_COVERAGE_NOT_FOUND',
-      event_timestamp: new Date(new Date(now).getTime() + 50).toISOString(),
-      metadata_json: {
+    const auditEvents: Omit<AuditEvent, 'id'>[] = [
+      {
+        policy_id: state.policy.id,
         vehicle_id: vehicleId,
-        date_of_loss: dateOfLoss,
-        coverage_version_id: matched?.id ?? null,
-        result: verificationStatus,
+        claim_id: null,
+        event_type: 'HISTORICAL_COVERAGE_LOOKUP',
+        event_timestamp: now,
+        metadata_json: { vehicle_id: vehicleId, date_of_loss: dateOfLoss },
+        created_at: now,
+        category: 'coverage',
+        human_label: 'Historical Coverage Lookup',
       },
-      created_at: now,
-      category: 'coverage',
-      human_label: coverageFound ? 'Historical Coverage Found' : 'Historical Coverage Not Found',
-    },
-  ]
+      {
+        policy_id: state.policy.id,
+        vehicle_id: vehicleId,
+        claim_id: null,
+        event_type: coverageFound ? 'HISTORICAL_COVERAGE_FOUND' : 'HISTORICAL_COVERAGE_NOT_FOUND',
+        event_timestamp: new Date(new Date(now).getTime() + 50).toISOString(),
+        metadata_json: {
+          vehicle_id: vehicleId,
+          date_of_loss: dateOfLoss,
+          coverage_version_id: matched?.id ?? null,
+          result: verificationStatus,
+        },
+        created_at: now,
+        category: 'coverage',
+        human_label: coverageFound ? 'Historical Coverage Found' : 'Historical Coverage Not Found',
+      },
+    ]
 
-  return {
-    lookup: {
-      coverage_found: coverageFound,
-      coverage_version: matched ? { ...matched } : null,
-      verification_status: verificationStatus,
-      date_queried: dateOfLoss,
-      vehicle_id: vehicleId,
-    },
-    auditEvents,
+    return {
+      lookup: {
+        coverage_found: coverageFound,
+        coverage_version: matched ? { ...matched } : null,
+        verification_status: verificationStatus,
+        date_queried: dateOfLoss,
+        vehicle_id: vehicleId,
+      },
+      auditEvents,
+    }
   }
+
+  // ─── Real Backend Call ───────────────────────────────────────────────────
+  const lookup = await apiFetch<CoverageLookupResult>('/api/coverage/check', {
+    method: 'POST',
+    body: JSON.stringify({ vehicle_id: vehicleId, date_of_loss: dateOfLoss }),
+  })
+
+  // Retrieve updated audit events from the server
+  const auditEvents = await getAuditEvents(state)
+
+  return { lookup, auditEvents }
 }
 
-// Also check against advanced versioning fixtures (for the demo toggle)
+// Check against advanced versioning fixtures (for the demo toggle)
 export async function checkAdvancedCoverage(
   dateOfLoss: string,
 ): Promise<CoverageLookupResult> {
-  await delay(MOCK_DELAY_MS)
   const versions = [ADVANCED_COVERAGE_VERSION_1, ADVANCED_COVERAGE_VERSION_2]
   const matched = versions.find((cv) => isCoverageActiveOnDate(cv, dateOfLoss)) ?? null
 

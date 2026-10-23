@@ -7,6 +7,8 @@ import { Modal } from './Modal'
 import { Shield, FileDown, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import type { Policy, Vehicle, CoverageVersion } from '../types/domain'
 
+import { API_BASE_URL } from '../services/apiClient'
+
 interface ProofOfInsuranceModalProps {
   isOpen: boolean
   onClose: () => void
@@ -25,6 +27,11 @@ export function ProofOfInsuranceModal({
   asOfDate = '2026-01-10',
 }: ProofOfInsuranceModalProps) {
   const coverageEndFormatted = vehicle.removed_at ?? (coverageVersion?.valid_to ?? 'Present')
+
+  const handleDownloadPdf = () => {
+    const versionId = coverageVersion?.id ?? 1
+    window.open(`${API_BASE_URL}/api/coverage/${versionId}/proof.pdf`, '_blank')
+  }
 
   return (
     <Modal
@@ -150,17 +157,17 @@ export function ProofOfInsuranceModal({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Info size={14} className="text-slate-400" />
-            <span>Official PDF generation will be implemented in Phase 3 via backend service.</span>
+            <span>Generated server-side via FastAPI &amp; ReportLab with DEMO ONLY watermark.</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              disabled
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 cursor-not-allowed ring-1 ring-slate-700/60"
-              title="Official PDF generation is scheduled for Phase 3"
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-semibold text-white transition-colors shadow-md"
+              title="Download official DEMO ONLY proof of insurance PDF"
             >
               <FileDown size={14} />
-              Download PDF (Phase 3)
+              Download PDF
             </button>
             <button
               type="button"
