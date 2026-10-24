@@ -3,7 +3,7 @@
 // for repeatable interviewer demonstrations.
 
 import { Modal } from './Modal'
-import { RotateCcw, AlertTriangle } from 'lucide-react'
+import { RotateCcw, AlertCircle } from 'lucide-react'
 
 interface ResetConfirmModalProps {
   isOpen: boolean
@@ -15,23 +15,28 @@ export function ResetConfirmModal({ isOpen, onClose, onConfirm }: ResetConfirmMo
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Reset Demonstration State?" size="sm">
       <div className="space-y-4">
-        <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-300">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
-          <div>
-            <strong className="block font-semibold">Restore Initial Canonical Baseline</strong>
-            This will return all vehicles, coverage versions, claims, and audit logs to the baseline state (BMW X3 active, no claims filed).
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-950">
+          <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+          <div className="space-y-1">
+            <strong className="block font-bold text-amber-900">Restore Canonical Baseline</strong>
+            <p className="text-amber-800 leading-relaxed">
+              This resets synthetic demo data only.
+            </p>
+            <p className="text-amber-700 text-[11px] leading-relaxed">
+              Returns policy, BMW X3 vehicle state, coverage records, and audit events to the canonical baseline.
+            </p>
           </div>
         </div>
 
-        <p className="text-xs text-slate-300">
-          Are you sure you want to restart the interactive walkthrough?
+        <p className="text-xs text-slate-600">
+          Are you sure you want to restart the walkthrough from the initial state?
         </p>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-700 bg-transparent px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition-colors"
+            className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -41,9 +46,9 @@ export function ResetConfirmModal({ isOpen, onClose, onConfirm }: ResetConfirmMo
               onConfirm()
               onClose()
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 text-xs font-semibold text-white transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a1128] hover:bg-[#1a2952] px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={13} className="text-[#00c2cb]" />
             Confirm Reset
           </button>
         </div>

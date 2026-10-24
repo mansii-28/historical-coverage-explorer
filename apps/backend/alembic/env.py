@@ -7,6 +7,7 @@ Supports async engine via run_sync for online migrations.
 """
 
 import asyncio
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -15,16 +16,23 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import app.models  # noqa: F401
 from alembic import context
-
-# ─── Application imports ─────────────────────────────────────────────────────
 from app.core.config import settings
+from app.core.db_url import normalize_database_url
 from app.db.base import Base
 
 # ─── Alembic Config ──────────────────────────────────────────────────────────
 config = context.config
 
-# Override sqlalchemy.url with our runtime DATABASE_URL
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Prefer unpooled direct connection URL for DDL migrations on Neon,
+# falling back to runtime DATABASE_URL
+raw_migration_url = (
+    os.environ.get("DATABASE_URL_UNPOOLED")
+    or getattr(settings, "DATABASE_URL_UNPOOLED", None)
+    or os.environ.get("DATABASE_URL")
+    or settings.DATABASE_URL
+)
+migration_url = normalize_database_url(raw_migration_url)
+config.set_main_option("sqlalchemy.url", migration_url)
 
 # Set up Python logging from alembic.ini
 if config.config_file_name is not None:

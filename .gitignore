@@ -2,6 +2,8 @@
 .env
 .env.local
 .env.*.local
+.env.vercel.local
+.vercel/
 
 # ─── Python ─────────────────────────────────────────────────────────────────────
 __pycache__/
@@ -55,3 +57,5 @@ evidence/*.jsonl
 # ─── Generated PDFs ─────────────────────────────────────────────────────────────
 *.pdf
 !evidence/generated/demo-proof-of-insurance.pdf
+.vercel
+.env*

@@ -2,7 +2,7 @@
 // Centralized HTTP client for FastAPI communication.
 // Fallback to mock mode is only enabled if VITE_USE_MOCK_API === 'true'.
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:8000'
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 export class ApiError extends Error {

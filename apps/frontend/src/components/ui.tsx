@@ -1,12 +1,27 @@
 // ─── Shared UI Components ─────────────────────────────────────────────────────
-// Reusable building blocks for the Historical Coverage Explorer UI.
+// Tint-inspired geometric design system: clean editorial typography,
+// flat saturated color fields, minimal borders, and high contrast.
 
 import React from 'react'
 import { CheckCircle, Clock, AlertTriangle, XCircle, Info } from 'lucide-react'
 
+// ─── Multicolor Signature Bar Component ───────────────────────────────────────
+export function MulticolorBar({ className = '' }: { className?: string }) {
+  return (
+    <div className={`tint-multicolor-bar ${className}`} role="presentation">
+      <span className="tint-bar-cyan" />
+      <span className="tint-bar-mint" />
+      <span className="tint-bar-orange" />
+      <span className="tint-bar-pink" />
+      <span className="tint-bar-purple" />
+      <span className="tint-bar-cobalt" />
+    </div>
+  )
+}
+
 // ─── Badge ────────────────────────────────────────────────────────────────────
 
-type BadgeVariant = 'active' | 'historical' | 'success' | 'warning' | 'error' | 'neutral' | 'info'
+type BadgeVariant = 'active' | 'historical' | 'success' | 'warning' | 'error' | 'neutral' | 'info' | 'cyan'
 
 interface BadgeProps {
   variant: BadgeVariant
@@ -16,19 +31,20 @@ interface BadgeProps {
 }
 
 const BADGE_STYLES: Record<BadgeVariant, string> = {
-  active: 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30',
-  historical: 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30',
-  success: 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30',
-  warning: 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30',
-  error: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30',
-  neutral: 'bg-slate-700/50 text-slate-400 ring-1 ring-slate-600/50',
-  info: 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30',
+  active: 'bg-emerald-50 text-emerald-800 border border-emerald-200/80',
+  historical: 'bg-amber-50 text-amber-800 border border-amber-200/80',
+  success: 'bg-emerald-50 text-emerald-800 border border-emerald-200/80',
+  warning: 'bg-amber-50 text-amber-800 border border-amber-200/80',
+  error: 'bg-rose-50 text-rose-800 border border-rose-200/80',
+  neutral: 'bg-slate-100 text-slate-700 border border-slate-200',
+  info: 'bg-sky-50 text-sky-800 border border-sky-200/80',
+  cyan: 'bg-cyan-50 text-cyan-900 border border-cyan-200/80',
 }
 
 export function Badge({ variant, label, icon, className = '' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${BADGE_STYLES[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${BADGE_STYLES[variant]} ${className}`}
       aria-label={label}
     >
       {icon}
@@ -59,13 +75,24 @@ interface CardProps {
   children: React.ReactNode
   className?: string
   id?: string
+  topRuleColor?: 'cyan' | 'cobalt' | 'mint' | 'orange' | 'purple' | 'pink' | 'none'
 }
 
-export function Card({ children, className = '', id }: CardProps) {
+export function Card({ children, className = '', id, topRuleColor = 'none' }: CardProps) {
+  const topRuleClasses = {
+    cyan: 'border-t-4 border-t-[#00c2cb]',
+    cobalt: 'border-t-4 border-t-[#1e40af]',
+    mint: 'border-t-4 border-t-[#10b981]',
+    orange: 'border-t-4 border-t-[#f97316]',
+    purple: 'border-t-4 border-t-[#7c3aed]',
+    pink: 'border-t-4 border-t-[#ec4899]',
+    none: '',
+  }
+
   return (
     <div
       id={id}
-      className={`rounded-xl border border-slate-800 bg-slate-900/60 ${className}`}
+      className={`rounded-xl border border-slate-200 bg-white shadow-xs text-slate-900 ${topRuleClasses[topRuleColor]} ${className}`}
     >
       {children}
     </div>
@@ -74,7 +101,7 @@ export function Card({ children, className = '', id }: CardProps) {
 
 export function CardHeader({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`border-b border-slate-800 px-6 py-4 ${className}`}>{children}</div>
+    <div className={`border-b border-slate-100 px-6 py-4.5 ${className}`}>{children}</div>
   )
 }
 
@@ -91,20 +118,21 @@ interface StatCardProps {
   subtext?: string
   variant?: BadgeVariant
   id?: string
+  accentColor?: string
 }
 
-export function StatCard({ icon, label, value, subtext, id }: StatCardProps) {
+export function StatCard({ icon, label, value, subtext, id, accentColor = 'bg-slate-100 text-slate-700' }: StatCardProps) {
   return (
-    <Card id={id} className="p-5">
+    <div id={id} className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300">
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800 text-slate-400">
+        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${accentColor}`}>
           {icon}
         </div>
       </div>
-      <p className="mt-3 text-2xl font-bold text-slate-100">{value}</p>
-      <p className="mt-0.5 text-sm font-medium text-slate-400">{label}</p>
-      {subtext && <p className="mt-1 text-xs text-slate-500">{subtext}</p>}
-    </Card>
+      <p className="mt-3 text-2xl font-extrabold tracking-tight text-[#0a1128]">{value}</p>
+      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      {subtext && <p className="mt-1 text-xs text-slate-400">{subtext}</p>}
+    </div>
   )
 }
 
@@ -114,16 +142,22 @@ interface SectionHeaderProps {
   title: string
   subtitle?: string
   actions?: React.ReactNode
+  eyebrow?: string
 }
 
-export function SectionHeader({ title, subtitle, actions }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, actions, eyebrow }: SectionHeaderProps) {
   return (
-    <div className="mb-5 flex items-start justify-between">
+    <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <h2 className="text-base font-semibold text-slate-100">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+        {eyebrow && (
+          <div className="text-[11px] font-bold uppercase tracking-widest text-[#00c2cb] mb-1">
+            {eyebrow}
+          </div>
+        )}
+        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#0a1128]">{title}</h2>
+        {subtitle && <p className="mt-1 text-sm text-slate-600 leading-relaxed">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-2.5 shrink-0">{actions}</div>}
     </div>
   )
 }
@@ -133,7 +167,7 @@ export function SectionHeader({ title, subtitle, actions }: SectionHeaderProps) 
 export function LoadingSpinner({ size = 20 }: { size?: number }) {
   return (
     <svg
-      className="animate-spin text-indigo-400"
+      className="animate-spin text-[#00c2cb]"
       style={{ width: size, height: size }}
       fill="none"
       viewBox="0 0 24 24"
@@ -151,10 +185,10 @@ export function LoadingSpinner({ size = 20 }: { size?: number }) {
 
 export function PageLoading() {
   return (
-    <div className="flex h-48 items-center justify-center" role="status" aria-live="polite">
+    <div className="flex h-56 items-center justify-center" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-3">
-        <LoadingSpinner size={28} />
-        <p className="text-sm text-slate-500">Loading…</p>
+        <LoadingSpinner size={32} />
+        <p className="text-sm font-medium text-slate-500">Loading system state…</p>
       </div>
     </div>
   )
@@ -170,43 +204,43 @@ export function EmptyState({
   description: string
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-500">
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="mb-3.5 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500 border border-slate-200">
         {icon}
       </div>
-      <p className="text-sm font-medium text-slate-400">{title}</p>
-      <p className="mt-1 max-w-xs text-xs text-slate-600">{description}</p>
+      <p className="text-base font-bold text-[#0a1128]">{title}</p>
+      <p className="mt-1 max-w-sm text-xs text-slate-500 leading-relaxed">{description}</p>
     </div>
   )
 }
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-center" role="alert">
-      <div className="flex items-center justify-center gap-2 text-red-400">
-        <XCircle size={16} />
-        <p className="text-sm font-medium">{message}</p>
+    <div className="rounded-xl border border-rose-200 bg-rose-50/70 p-4.5 text-center" role="alert">
+      <div className="flex items-center justify-center gap-2.5 text-rose-800">
+        <XCircle size={18} className="text-rose-600" />
+        <p className="text-sm font-semibold">{message}</p>
       </div>
     </div>
   )
 }
 
-// ─── Info Banner ──────────────────────────────────────────────────────────────
+// ─── Info Banners ─────────────────────────────────────────────────────────────
 
 export function InfoBanner({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`flex items-start gap-3 rounded-lg border border-blue-500/20 bg-blue-500/10 p-4 ${className}`}>
-      <Info size={16} className="mt-0.5 shrink-0 text-blue-400" />
-      <div className="text-sm text-blue-300">{children}</div>
+    <div className={`flex items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/70 p-4 text-sky-950 ${className}`}>
+      <Info size={17} className="mt-0.5 shrink-0 text-sky-600" />
+      <div className="text-xs leading-relaxed text-sky-900">{children}</div>
     </div>
   )
 }
 
 export function WarningBanner({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 ${className}`}>
-      <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-400" />
-      <div className="text-sm text-amber-300">{children}</div>
+    <div className={`flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-amber-950 ${className}`}>
+      <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-600" />
+      <div className="text-xs leading-relaxed text-amber-900">{children}</div>
     </div>
   )
 }
@@ -223,9 +257,9 @@ export function DetailRow({
   mono?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-slate-800/60 last:border-0">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className={`text-sm font-medium text-slate-200 ${mono ? 'font-mono text-xs' : ''}`}>
+    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
+      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
+      <span className={`text-sm font-semibold text-[#0a1128] ${mono ? 'font-mono text-xs' : ''}`}>
         {value}
       </span>
     </div>
@@ -234,7 +268,7 @@ export function DetailRow({
 
 // ─── Button ───────────────────────────────────────────────────────────────────
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type ButtonVariant = 'primary' | 'secondary' | 'dark' | 'danger' | 'ghost'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -244,16 +278,17 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50',
-  secondary: 'border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-50',
-  danger: 'bg-red-600 hover:bg-red-500 text-white disabled:opacity-50',
-  ghost: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-50',
+  primary: 'bg-[#00c2cb] hover:bg-[#0891b2] text-[#0a1128] font-bold shadow-xs border border-transparent disabled:opacity-50',
+  secondary: 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-xs disabled:opacity-50',
+  dark: 'bg-[#0a1128] hover:bg-[#1a2952] text-white font-semibold shadow-xs border border-transparent disabled:opacity-50',
+  danger: 'bg-rose-600 hover:bg-rose-500 text-white font-semibold disabled:opacity-50',
+  ghost: 'text-slate-600 hover:text-[#0a1128] hover:bg-slate-100 font-semibold disabled:opacity-50',
 }
 
 const BUTTON_SIZES: Record<string, string> = {
   sm: 'px-3 py-1.5 text-xs rounded-lg',
-  md: 'px-4 py-2 text-sm rounded-lg',
-  lg: 'px-5 py-2.5 text-sm rounded-xl',
+  md: 'px-4 py-2 text-xs rounded-lg',
+  lg: 'px-5 py-2.5 text-sm rounded-lg',
 }
 
 export function Button({
@@ -268,7 +303,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center gap-2 font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00c2cb] cursor-pointer ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`}
       disabled={disabled || loading}
       {...props}
     >

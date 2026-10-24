@@ -1,18 +1,127 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --brand-primary: #4f46e5;
-  --brand-secondary: #7c3aed;
-  --brand-accent: #06b6d4;
-  font-family: 'Inter', system-ui, sans-serif;
+  /* ─── Tint-Inspired Visual Palette ─────────────────────────────────────────── */
+  /* Ink & Navy */
+  --tint-navy-950: #070d1e;
+  --tint-navy-900: #0a1128;
+  --tint-navy-800: #101c3d;
+  --tint-navy-700: #1a2952;
+  --tint-navy-600: #263a6e;
+
+  /* Surfaces & Neutrals */
+  --tint-bg: #f8fafc;
+  --tint-surface: #ffffff;
+  --tint-surface-muted: #f1f5f9;
+  --tint-border: #e2e8f0;
+  --tint-border-strong: #cbd5e1;
+
+  /* Text */
+  --tint-text-primary: #0a1128;
+  --tint-text-secondary: #334155;
+  --tint-text-muted: #64748b;
+  --tint-text-light: #f8fafc;
+
+  /* Accent Family */
+  --tint-cyan: #00c2cb;
+  --tint-cyan-hover: #0891b2;
+  --tint-cyan-light: #e6fffa;
+  --tint-cobalt: #1e40af;
+  --tint-cobalt-light: #eff6ff;
+  --tint-mint: #10b981;
+  --tint-mint-light: #ecfdf5;
+  --tint-orange: #f97316;
+  --tint-orange-light: #fff7ed;
+  --tint-purple: #7c3aed;
+  --tint-purple-light: #f5f3ff;
+  --tint-pink: #ec4899;
+  --tint-pink-light: #fdf2f8;
+  --tint-amber: #f59e0b;
+  --tint-amber-light: #fffbeb;
+
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--tint-bg);
+  color: var(--tint-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* ─── Signature Multicolor Band ─────────────────────────────────────────────── */
+.tint-multicolor-bar {
+  display: flex;
+  height: 4px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tint-multicolor-bar > span {
+  flex: 1;
+  height: 100%;
+}
+
+.tint-bar-cyan { background-color: var(--tint-cyan); }
+.tint-bar-mint { background-color: var(--tint-mint); }
+.tint-bar-orange { background-color: var(--tint-orange); }
+.tint-bar-pink { background-color: var(--tint-pink); }
+.tint-bar-purple { background-color: var(--tint-purple); }
+.tint-bar-cobalt { background-color: var(--tint-cobalt); }
+
+/* ─── Original Product Mark ─────────────────────────────────────────────────── */
+.product-logo-mark {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: var(--tint-navy-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(10, 17, 40, 0.15);
+}
+
+.product-logo-mark::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--tint-cyan);
+  border-radius: 2px;
+}
+
+.product-logo-mark::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--tint-cyan);
+  border-radius: 2px;
+}
+
+/* ─── Editorial Typography Utilities ────────────────────────────────────────── */
+.text-display {
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.text-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }

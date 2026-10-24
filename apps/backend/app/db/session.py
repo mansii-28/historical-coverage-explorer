@@ -4,18 +4,36 @@ import logging
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# SQLAlchemy async engine
+# Serverless Connection Strategy:
+# When running under Vercel Serverless Functions against Neon PostgreSQL, function
+# execution environments scale up and down ephemerally based on traffic.
+# Neon provides managed connection pooling externally via pgBouncer.
+# If each ephemeral serverless function instance maintained a local connection pool
+# (e.g. pool_size=10, max_overflow=20), sudden concurrency spikes would quickly exhaust
+# upstream PostgreSQL connection slots.
+# Therefore, in serverless environments (Vercel / production), we configure NullPool with
+# pool_pre_ping=True to open connections on demand and immediately return them to Neon's
+# pooler upon session closure. Local development retains standard application-level pooling.
+engine_kwargs = {
+    "echo": False,
+    "pool_pre_ping": True,
+}
+
+if settings.is_serverless:
+    engine_kwargs["poolclass"] = NullPool
+else:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=False,  # Set to True for SQL query logging during development
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    **engine_kwargs,
 )
 
 # Session factory

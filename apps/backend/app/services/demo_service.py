@@ -9,12 +9,140 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Literal
 
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CoverageVersion, Policy, Vehicle
 from app.schemas import DemoResetResponse
 from app.services.audit_service import record_audit_event
+
+
+async def seed_if_empty(session: AsyncSession) -> bool:
+    """
+    Safely seeds the canonical Jordan Lee / DEMO-AUTO-1024 demonstration dataset
+    if and only if the database is unpopulated.
+
+    Non-destructive initialization for cloud / serverless deployments:
+    - Queries for canonical policy 'DEMO-AUTO-1024'.
+    - If found: exits immediately with False, modifying ZERO records.
+    - If not found: seeds the canonical baseline (policy, vehicle, coverage, audit events).
+    - NEVER truncates tables or clears claims/history.
+
+    Returns:
+        True if the database was seeded, False if data already existed.
+    """
+    stmt = select(Policy).where(Policy.policy_number == "DEMO-AUTO-1024")
+    result = await session.execute(stmt)
+    existing_policy = result.scalar_one_or_none()
+
+    if existing_policy is not None:
+        return False
+
+    now_utc = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
+
+    # 1. Seed Policy
+    policy = Policy(
+        policy_number="DEMO-AUTO-1024",
+        customer_name="Jordan Lee",
+        status="ACTIVE",
+        created_at=now_utc,
+        updated_at=now_utc,
+    )
+    session.add(policy)
+    await session.flush()
+
+    # 2. Seed Vehicle
+    vehicle = Vehicle(
+        policy_id=policy.id,
+        vin="DEMO-VIN-001",
+        make="BMW",
+        model="X3",
+        year=2024,
+        added_at=date(2026, 1, 1),
+        removed_at=None,
+        created_at=now_utc,
+        updated_at=now_utc,
+    )
+    session.add(vehicle)
+    await session.flush()
+
+    # 3. Seed Coverage Version (Canonical Version 1)
+    cv = CoverageVersion(
+        policy_id=policy.id,
+        vehicle_id=vehicle.id,
+        valid_from=date(2026, 1, 1),
+        valid_to=None,
+        coverage_type="Comprehensive",
+        liability_limit=Decimal("100000.00"),
+        deductible=Decimal("500.00"),
+        version_label="Version 1",
+        created_at=now_utc,
+    )
+    session.add(cv)
+    await session.flush()
+
+    # 4. Record Initial Domain Audit Events
+    await record_audit_event(
+        session=session,
+        action="POLICY_CREATED",
+        entity_type="POLICY",
+        entity_id=policy.id,
+        policy_id=policy.id,
+        vehicle_id=None,
+        coverage_version_id=None,
+        claim_id=None,
+        actor="SYSTEM",
+        payload={
+            "policy_number": policy.policy_number,
+            "customer_name": policy.customer_name,
+            "status": policy.status,
+            "source": "seed_if_empty",
+        },
+        event_time=now_utc,
+    )
+    await record_audit_event(
+        session=session,
+        action="VEHICLE_ADDED",
+        entity_type="VEHICLE",
+        entity_id=vehicle.id,
+        policy_id=policy.id,
+        vehicle_id=vehicle.id,
+        coverage_version_id=None,
+        claim_id=None,
+        actor="SYSTEM",
+        payload={
+            "vin": vehicle.vin,
+            "make": vehicle.make,
+            "model": vehicle.model,
+            "year": vehicle.year,
+            "added_at": vehicle.added_at.isoformat(),
+            "source": "seed_if_empty",
+        },
+        event_time=now_utc,
+    )
+    await record_audit_event(
+        session=session,
+        action="COVERAGE_ACTIVATED",
+        entity_type="COVERAGE_VERSION",
+        entity_id=cv.id,
+        policy_id=policy.id,
+        vehicle_id=vehicle.id,
+        coverage_version_id=cv.id,
+        claim_id=None,
+        actor="SYSTEM",
+        payload={
+            "coverage_type": cv.coverage_type,
+            "liability_limit": str(cv.liability_limit),
+            "deductible": str(cv.deductible),
+            "valid_from": cv.valid_from.isoformat(),
+            "version_label": cv.version_label,
+            "source": "seed_if_empty",
+        },
+        event_time=now_utc,
+    )
+
+    await session.commit()
+    return True
 
 
 async def reset_demo_data(
