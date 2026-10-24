@@ -1,0 +1,48 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.7.0 -- /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/backend/.venv/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-6.0.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collecting ... collected 30 items
+
+tests/test_api_endpoints.py::test_health_endpoint PASSED                 [  3%]
+tests/test_api_endpoints.py::test_18_demo_reset_idempotency PASSED       [  6%]
+tests/test_api_endpoints.py::test_api_correlation_id_propagation PASSED  [ 10%]
+tests/test_api_endpoints.py::test_api_policy_and_vehicles PASSED         [ 13%]
+tests/test_api_endpoints.py::test_api_vehicle_removal_and_coverage PASSED [ 16%]
+tests/test_api_endpoints.py::test_api_claims_workflow PASSED             [ 20%]
+tests/test_api_endpoints.py::test_api_audit_and_pdf PASSED               [ 23%]
+tests/test_claim_service.py::test_2_claim_filed_after_removal_finds_historical_coverage PASSED [ 26%]
+tests/test_claim_service.py::test_3_loss_after_coverage_ended_routes_to_manual_review PASSED [ 30%]
+tests/test_claim_service.py::test_12_claim_pinning_remains_stable_after_policy_changes PASSED [ 33%]
+tests/test_claim_service.py::test_14_claim_date_of_loss_after_filed_at_rejected PASSED [ 36%]
+tests/test_claim_service.py::test_15_policy_vehicle_mismatch_rejected PASSED [ 40%]
+tests/test_claim_service.py::test_claim_queries_for_policy PASSED        [ 43%]
+tests/test_coverage_service.py::test_1_coverage_during_active_interval PASSED [ 46%]
+tests/test_coverage_service.py::test_4_boundary_valid_from_is_inclusive PASSED [ 50%]
+tests/test_coverage_service.py::test_5_boundary_valid_to_is_exclusive PASSED [ 53%]
+tests/test_coverage_service.py::test_6_boundary_day_before_valid_to PASSED [ 56%]
+tests/test_coverage_service.py::test_7_multiple_versions_chronological_selection PASSED [ 60%]
+tests/test_coverage_service.py::test_8_coverage_overlap_prevention PASSED [ 63%]
+tests/test_coverage_service.py::test_9_invalid_coverage_range_rejected PASSED [ 66%]
+tests/test_coverage_service.py::test_16_historical_lookup_unknown_vehicle PASSED [ 70%]
+tests/test_database_integrity.py::test_13_database_prevents_deletion_of_pinned_coverage_version PASSED [ 73%]
+tests/test_database_integrity.py::test_database_prevents_deletion_of_policy_with_vehicles PASSED [ 76%]
+tests/test_database_integrity.py::test_database_prevents_deletion_of_vehicle_with_coverage PASSED [ 80%]
+tests/test_pdf.py::test_17_pdf_generation_content_and_watermark PASSED   [ 83%]
+tests/test_pdf.py::test_pdf_generation_unknown_coverage_version_404 PASSED [ 86%]
+tests/test_vehicle_service.py::test_10_vehicle_removal_closes_active_coverage PASSED [ 90%]
+tests/test_vehicle_service.py::test_11_double_vehicle_removal_returns_409 PASSED [ 93%]
+tests/test_vehicle_service.py::test_removal_date_before_vehicle_added_date_rejected PASSED [ 96%]
+tests/test_vehicle_service.py::test_removal_unknown_vehicle_returns_404 PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12
+  /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/backend/.venv/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    haveNameConstant = hasattr(ast,'NameConstant')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 30 passed, 1 warning in 0.92s =========================

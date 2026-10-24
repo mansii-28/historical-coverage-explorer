@@ -12,9 +12,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger
 from app.models import Claim, Policy, Vehicle
 from app.services.audit_service import record_audit_event
 from app.services.coverage_service import get_coverage_on_date
+
+logger = get_logger("service.claim")
 
 
 async def get_claim_by_id(session: AsyncSession, claim_id: int) -> Claim | None:
@@ -68,6 +71,24 @@ async def create_claim(
     """
     if filed_at is None:
         filed_at = datetime.now(UTC)
+
+    logger.info(
+        "claim_creation_started",
+        policy_id=policy_id,
+        vehicle_id=vehicle_id,
+        date_of_loss=date_of_loss.isoformat(),
+        filed_at=filed_at.isoformat(),
+    )
+
+    # Validate that date_of_loss is not after filed_at
+    if date_of_loss > filed_at.date():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Date of loss ({date_of_loss.isoformat()}) cannot be after "
+                f"claim filing date ({filed_at.date().isoformat()})."
+            ),
+        )
 
     # 1. Validate Policy
     policy_res = await session.execute(select(Policy).where(Policy.id == policy_id))
@@ -155,6 +176,14 @@ async def create_claim(
                 "deductible": str(matched_coverage.deductible),
             },
         )
+        logger.info(
+            "claim_created",
+            claim_id=claim.id,
+            claim_number=claim.claim_number,
+            coverage_version_id=coverage_version_id,
+            coverage_verification_status=coverage_verification_status,
+            date_of_loss=date_of_loss.isoformat(),
+        )
     else:
         # Event: CLAIM_SENT_TO_MANUAL_REVIEW
         await record_audit_event(
@@ -171,6 +200,13 @@ async def create_claim(
                     "routed to claims examiner for manual review."
                 ),
             },
+        )
+        logger.info(
+            "claim_manual_review_required",
+            claim_id=claim.id,
+            claim_number=claim.claim_number,
+            date_of_loss=date_of_loss.isoformat(),
+            reason="No coverage active on date of loss",
         )
 
     await session.commit()

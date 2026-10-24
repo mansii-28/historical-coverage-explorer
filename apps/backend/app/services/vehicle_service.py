@@ -12,9 +12,12 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger, mask_vin
 from app.models import CoverageVersion, Vehicle
 from app.schemas import VehicleRemovalResponse
 from app.services.audit_service import record_audit_event
+
+logger = get_logger("service.vehicle")
 
 
 async def get_vehicle_by_id(session: AsyncSession, vehicle_id: int) -> Vehicle | None:
@@ -55,6 +58,12 @@ async def remove_vehicle(
     9. Emit audit event: VEHICLE_REMOVED.
     10. Commit transaction.
     """
+    logger.info(
+        "vehicle_removal_started",
+        vehicle_id=vehicle_id,
+        effective_date=effective_date.isoformat(),
+    )
+
     vehicle = await get_vehicle_by_id(session, vehicle_id)
     if not vehicle:
         raise HTTPException(
@@ -64,7 +73,7 @@ async def remove_vehicle(
 
     if vehicle.removed_at is not None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_409_CONFLICT,
             detail=(
                 f"Vehicle #{vehicle_id} is already removed "
                 f"effective {vehicle.removed_at.isoformat()}."
@@ -149,6 +158,15 @@ async def remove_vehicle(
     )
 
     await session.commit()
+
+    logger.info(
+        "vehicle_removal_completed",
+        vehicle_id=vehicle.id,
+        masked_vin=mask_vin(vehicle.vin),
+        policy_id=vehicle.policy_id,
+        removed_at=effective_date.isoformat(),
+        closed_coverage_version_id=active_coverage.id,
+    )
 
     return VehicleRemovalResponse(
         message="Vehicle removed successfully. Historical coverage preserved.",

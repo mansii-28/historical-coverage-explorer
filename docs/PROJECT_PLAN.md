@@ -96,25 +96,30 @@
 ## Phase 4 — Testing, Observability, Logs, Audit Evidence, and Demonstration Proof
 **Goal:** Prove the product behaves correctly with automated tests and structured observability.
 
-Key deliverables:
-- Backend tests (pytest):
-  - Coverage found for date during active period
-  - Claim filed after removal finds historical coverage
-  - Date after removal returns no coverage match
-  - Multiple coverage versions select correct historical version
-  - Claim coverage_version_id is stable after policy changes
-  - Vehicle removal does not delete historical records
-  - Invalid date ranges are rejected
-- Frontend tests (Vitest + React Testing Library)
-- End-to-end tests (Playwright):
-  - Scenario A: Covered historical claim
-  - Scenario B: Post-removal uncovered date
-  - Scenario C: Historical coverage version selection
-- Structured application logging (structlog or equivalent)
-- Correlation/request IDs on all log lines
-- Evidence folder with test results and screenshots
+| # | Deliverable | Status |
+|---|-------------|--------|
+| 1 | Isolated PostgreSQL test database (`historical_coverage_test`) with fail-fast safety guard | ✅ |
+| 2 | Backend test suite (30 pytest tests, 89% total coverage, domain services at 93%–98%) | ✅ |
+| 3 | Temporal boundary coverage tests (inclusive `valid_from`, exclusive `valid_to`, day before) | ✅ |
+| 4 | Vehicle soft-removal and 409 conflict tests | ✅ |
+| 5 | Claim creation, historical lookup, and version pinning immutability tests | ✅ |
+| 6 | Manual review routing tests with verification of zero "Claim Denied" text | ✅ |
+| 7 | Foreign key `RESTRICT` delete-protection tests at the database layer | ✅ |
+| 8 | Version-specific ReportLab PDF generation and watermark verification tests | ✅ |
+| 9 | Structured JSON logging with `structlog` and contextvars | ✅ |
+| 10 | Request-scoped correlation IDs & `CorrelationIdMiddleware` with `duration_ms` timing | ✅ |
+| 11 | Sensitive data protection with automatic VIN masking (`••••-001`) | ✅ |
+| 12 | Frontend component tests (11 vitest tests across 4 test files) | ✅ |
+| 13 | Playwright E2E suite (4 core walkthrough scenarios in Chromium) | ✅ |
+| 14 | Reload persistence verification across PostgreSQL persistence | ✅ |
+| 15 | Live 6-request demonstration correlation trace (`sample-application-logs.jsonl`) | ✅ |
+| 16 | Trace explanation & operational logs vs domain audit comparison (`correlation-trace.md`) | ✅ |
+| 17 | Comprehensive Testing Strategy documentation (`docs/08-testing-strategy.md`) | ✅ |
+| 18 | Comprehensive Observability documentation (`docs/09-observability.md`) | ✅ |
+| 19 | Test summary report with metrics table (`evidence/test-summary.md`) | ✅ |
+| 20 | Complete validation report (`evidence/phase-4-validation.md`) & updated Makefile targets | ✅ |
 
-**Status:** NOT STARTED — awaiting authorization
+**Status:** ✅ COMPLETE
 
 ---
 

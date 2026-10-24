@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/backend
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-6.0.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 30 items
+
+tests/test_api_endpoints.py .......                                      [ 23%]
+tests/test_claim_service.py ......                                       [ 43%]
+tests/test_coverage_service.py ........                                  [ 70%]
+tests/test_database_integrity.py ...                                     [ 80%]
+tests/test_pdf.py ..                                                     [ 86%]
+tests/test_vehicle_service.py ....                                       [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12
+  /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/backend/.venv/lib/python3.12/site-packages/reportlab/lib/rl_safe_eval.py:12: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    haveNameConstant = hasattr(ast,'NameConstant')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+--------- coverage: platform darwin, python 3.12.12-final-0 ----------
+Name                               Stmts   Miss  Cover   Missing
+----------------------------------------------------------------
+app/__init__.py                        0      0   100%
+app/api/__init__.py                    0      0   100%
+app/api/routers/__init__.py            0      0   100%
+app/api/routers/claims.py             25      8    68%   51-56, 69-81
+app/api/routers/coverage.py           17      4    76%   29-31, 63
+app/api/routers/demo.py               10      0   100%
+app/api/routers/health.py             19      4    79%   32-35
+app/api/routers/policies.py           28     10    64%   27-33, 52-57, 76-81
+app/api/routers/vehicles.py           29     10    66%   32-38, 81-86, 109-114
+app/core/__init__.py                   0      0   100%
+app/core/config.py                    11      0   100%
+app/core/logging.py                   18      2    89%   19, 22
+app/core/middleware.py                28      4    86%   66-76
+app/db/__init__.py                     3      0   100%
+app/db/base.py                         3      0   100%
+app/db/session.py                     22     13    41%   33-40, 45-50
+app/main.py                           22      2    91%   27-28
+app/models/__init__.py               105     10    90%   61, 106, 154-158, 161, 216, 258
+app/schemas/__init__.py              102      0   100%
+app/services/__init__.py               0      0   100%
+app/services/audit_service.py         20      4    80%   55-60
+app/services/claim_service.py         56      2    96%   97, 106
+app/services/coverage_service.py      46      3    93%   162, 172, 175
+app/services/demo_service.py          35      7    80%   73-100
+app/services/document_service.py     174      3    98%   175-176, 203
+app/services/vehicle_service.py       43      1    98%   107
+----------------------------------------------------------------
+TOTAL                                816     87    89%
+
+======================== 30 passed, 1 warning in 1.44s =========================

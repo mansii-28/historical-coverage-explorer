@@ -12,7 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import claims, coverage, demo, health, policies, vehicles
 from app.core.config import settings
+from app.core.logging import setup_logging
+from app.core.middleware import CorrelationIdMiddleware
 from app.db.session import check_db_connection
+
+# Initialize structured logging
+setup_logging(settings.LOG_LEVEL)
 
 
 @asynccontextmanager
@@ -38,13 +43,15 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
-# ─── CORS ────────────────────────────────────────────────────────────────────
+# ─── Middleware ──────────────────────────────────────────────────────────────
+app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Correlation-ID"],
 )
 
 # ─── Routers ─────────────────────────────────────────────────────────────────

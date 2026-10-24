@@ -16,8 +16,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.logging import get_logger, mask_vin
 from app.models import CoverageVersion
 from app.services.audit_service import record_audit_event
+
+logger = get_logger("service.document")
 
 
 async def generate_proof_of_insurance_pdf(
@@ -28,6 +31,7 @@ async def generate_proof_of_insurance_pdf(
     Generate an official DEMO ONLY proof of insurance PDF for a specific CoverageVersion.
     Records a PROOF_OF_INSURANCE_GENERATED audit event upon generation.
     """
+    logger.info("proof_generation_started", coverage_version_id=coverage_version_id)
     query = (
         select(CoverageVersion)
         .options(
@@ -46,7 +50,7 @@ async def generate_proof_of_insurance_pdf(
         )
 
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
+    c = canvas.Canvas(buffer, pagesize=letter, pageCompression=0)
     width, height = letter
 
     # ─── Watermark Background ───────────────────────────────────────────────
@@ -284,5 +288,13 @@ async def generate_proof_of_insurance_pdf(
         },
     )
     await session.commit()
+
+    logger.info(
+        "proof_generated",
+        coverage_version_id=cov.id,
+        vehicle_id=cov.vehicle_id,
+        masked_vin=mask_vin(cov.vehicle.vin),
+        size_bytes=len(pdf_bytes),
+    )
 
     return pdf_bytes

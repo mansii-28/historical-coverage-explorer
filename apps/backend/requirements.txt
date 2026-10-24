@@ -9,6 +9,8 @@ pydantic-settings==2.6.1
 python-dotenv==1.0.1
 reportlab==4.2.5
 ruff==0.8.2
-pytest==8.3.4
+pytest==9.1.1
 pytest-cov==6.0.0
+pytest-asyncio==1.4.0
 httpx==0.28.0
+structlog==26.1.0

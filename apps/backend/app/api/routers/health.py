@@ -13,6 +13,7 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/health", summary="Health check")
+@router.get("/api/health", summary="Health check (API alias)")
 async def health_check():
     """
     Returns service health status including database connectivity.

@@ -1,0 +1,18 @@
+
+> frontend@0.0.0 test
+> vitest run
+
+
+ RUN  v5.0.5 /Users/mansibhanushali/Desktop/historical-coverage-explorer/apps/frontend
+
+ ✓ src/pages/AuditTrailPage.test.tsx (2 tests) 141ms
+ ✓ src/pages/PolicyPage.test.tsx (3 tests) 178ms
+ ✓ src/components/ProofOfInsuranceModal.test.tsx (2 tests) 158ms
+ ✓ src/pages/FileClaimPage.test.tsx (4 tests) 285ms
+ ✓ src/App.test.tsx (3 tests) 293ms
+
+ Test Files  5 passed (5)
+      Tests  14 passed (14)
+   Start at  22:42:34
+   Duration  1.63s (environment 65%, tests 15%, setup 9%, import 9%, worker 2%, transform 2%)
+

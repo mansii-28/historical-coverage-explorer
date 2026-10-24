@@ -28,6 +28,8 @@ env/
 # ─── Node / Frontend ────────────────────────────────────────────────────────────
 node_modules/
 *.local
+test-results/
+playwright-report/
 
 # ─── Vite / Build ───────────────────────────────────────────────────────────────
 apps/frontend/dist/

@@ -11,9 +11,12 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import get_logger
 from app.models import CoverageVersion
 from app.schemas import CoverageLookupResponse, CoverageVersionResponse
 from app.services.audit_service import record_audit_event
+
+logger = get_logger("service.coverage")
 
 
 async def get_coverage_on_date(
@@ -56,9 +59,31 @@ async def check_coverage(
     Returns status COVERAGE_FOUND or REQUIRES_MANUAL_REVIEW.
     Never returns CLAIM_DENIED automatically.
     """
+    logger.info(
+        "coverage_lookup_started",
+        vehicle_id=vehicle_id,
+        requested_date=date_of_loss.isoformat(),
+    )
+
     matched = await get_coverage_on_date(session, vehicle_id, date_of_loss)
     coverage_found = matched is not None
     verification_status = "COVERAGE_FOUND" if coverage_found else "REQUIRES_MANUAL_REVIEW"
+
+    if coverage_found and matched:
+        logger.info(
+            "coverage_lookup_found",
+            vehicle_id=vehicle_id,
+            requested_date=date_of_loss.isoformat(),
+            coverage_version_id=matched.id,
+            coverage_type=matched.coverage_type,
+        )
+    else:
+        logger.info(
+            "coverage_lookup_not_found",
+            vehicle_id=vehicle_id,
+            requested_date=date_of_loss.isoformat(),
+            verification_status="REQUIRES_MANUAL_REVIEW",
+        )
 
     # Use matched policy_id if not explicitly provided
     resolved_policy_id = policy_id or (matched.policy_id if matched else None)

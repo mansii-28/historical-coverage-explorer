@@ -71,11 +71,16 @@ format: ## Format backend (ruff) and frontend (prettier)
 	@cd $(FRONTEND_DIR) && npm run format
 
 # ─── Testing (Phase 4) ─────────────────────────────────────────────────────────
-test-backend: ## Run backend tests with coverage
-	@cd $(BACKEND_DIR) && .venv/bin/pytest --cov=app --cov-report=term-missing
+test: test-backend test-frontend ## Run backend and frontend test suites
 
-test-frontend: ## Run frontend unit tests
+test-backend: ## Run backend tests with pytest
+	@cd $(BACKEND_DIR) && .venv/bin/pytest -v
+
+test-frontend: ## Run frontend unit tests with vitest
 	@cd $(FRONTEND_DIR) && npm run test
 
 test-e2e: ## Run Playwright end-to-end tests
 	@cd $(FRONTEND_DIR) && npm run test:e2e
+
+coverage: ## Run backend tests with code coverage report
+	@cd $(BACKEND_DIR) && .venv/bin/pytest --cov=app --cov-report=term-missing

@@ -139,7 +139,7 @@ historical-coverage-explorer/
 | **Phase 1** | ✅ Complete | Repository, docs, architecture, foundation |
 | **Phase 2** | ✅ Complete | Frontend product design, interactive workflows, mock services |
 | **Phase 3** | ✅ Complete | Backend, PostgreSQL 14+, APIs, domain logic, PDF, full frontend integration |
-| Phase 4 | ⏳ Pending | Tests, observability, evidence |
+| **Phase 4** | ✅ Complete | 49 automated tests (pytest 89%, vitest 14/14, playwright 5/5, dedicated E2E DB), structured JSON logging, correlation IDs, test evidence |
 | Phase 5 | ⏳ Pending | Handoff and demo package |
 
 ---
@@ -175,17 +175,21 @@ Live system integration has been fully verified and captured in `evidence/screen
 ## Make Commands
 
 ```bash
-make help         # Show all commands
-make setup        # Install backend and frontend dependencies
-make dev          # Start both servers concurrently
-make backend      # Start FastAPI dev server only
-make frontend     # Start Vite dev server only
-make up           # Start all services via Docker Compose
-make down         # Stop Docker Compose services
-make lint         # Run ruff (backend) + oxlint (frontend)
-make format       # Format backend (ruff) + frontend (prettier)
-make db-upgrade   # Apply Alembic migrations
-make test-backend # Run pytest with coverage (Phase 4)
+make help          # Show all commands
+make setup         # Install backend and frontend dependencies
+make dev           # Start both servers concurrently
+make backend       # Start FastAPI dev server only
+make frontend      # Start Vite dev server only
+make up            # Start all services via Docker Compose
+make down          # Stop Docker Compose services
+make lint          # Run ruff (backend) + oxlint (frontend)
+make format        # Format backend (ruff) + frontend (prettier)
+make db-upgrade    # Apply Alembic migrations
+make test          # Run backend and frontend test suites
+make test-backend  # Run pytest with isolated test database
+make test-frontend # Run frontend vitest/RTL suite
+make test-e2e      # Run Playwright E2E browser tests
+make coverage      # Run pytest with terminal code coverage report
 ```
 
 ---
@@ -201,6 +205,11 @@ make test-backend # Run pytest with coverage (Phase 4)
 | [API Contract](docs/05-api-contract.md) | Endpoint documentation |
 | [Frontend Design](docs/06-frontend-design.md) | Frontend architecture, design system, and mock abstraction |
 | [Backend Integration](docs/07-backend-integration.md) | Backend architecture, database schema, transactions, domain logic & PDF |
+| [Testing Strategy](docs/08-testing-strategy.md) | Test pyramid, test DB safety guard, boundary tests, test matrices |
+| [Observability & Logging](docs/09-observability.md) | Structured JSON logging, correlation IDs, request timing, VIN masking |
+| [Phase 4 Validation Evidence](evidence/phase-4-validation.md) | Comprehensive Phase 4 verification report |
+| [Phase 4 Test Summary](evidence/test-summary.md) | Test execution metrics and service coverage breakdown |
+| [Correlation Trace Report](evidence/logs/correlation-trace.md) | End-to-end trace documentation, logs vs audit comparison |
 | [Phase 3 Validation Evidence](evidence/phase-3-validation.md) | Verification logs, database query evidence, browser persistence proof |
 | [Project Plan](docs/PROJECT_PLAN.md) | Five-phase implementation plan |
 | [Assumptions](docs/ASSUMPTIONS_AND_OPEN_QUESTIONS.md) | Known assumptions and open questions |

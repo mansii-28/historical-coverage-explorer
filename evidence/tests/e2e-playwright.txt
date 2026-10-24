@@ -1,0 +1,10 @@
+
+Running 5 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/historical-coverage.spec.ts:14:3 › Historical Coverage Explorer E2E Walkthrough › Scenario 1: Soft-remove BMW X3 → file retrospective Jan 10 claim → historical coverage found → claim submitted with pinned Coverage Version 1 → browser reload → pin remains persisted (1.5s)
+  ✓  2 [chromium] › e2e/historical-coverage.spec.ts:69:3 › Historical Coverage Explorer E2E Walkthrough › Scenario 2: Loss date after vehicle removal routes to manual review with zero claim denial (1.8s)
+  ✓  3 [chromium] › e2e/historical-coverage.spec.ts:100:3 › Historical Coverage Explorer E2E Walkthrough › Scenario 3: Audit Trail records immutable events and category filtering works (548ms)
+  ✓  4 [chromium] › e2e/historical-coverage.spec.ts:115:3 › Historical Coverage Explorer E2E Walkthrough › Scenario 4: Reset Demo restores canonical state (802ms)
+  ✓  5 [chromium] › e2e/historical-coverage.spec.ts:133:3 › Historical Coverage Explorer E2E Walkthrough › Scenario 5: Effective-Dated Coverage Version Selection across multiple intervals (1.0s)
+
+  5 passed (8.5s)
