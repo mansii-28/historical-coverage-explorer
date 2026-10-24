@@ -26,15 +26,14 @@ async def main() -> None:
         try:
             seeded = await seed_if_empty(session)
             if seeded:
-                logger.info(
-                    "✓ Seed-if-empty: Canonical DEMO-AUTO-1024 dataset successfully created."
-                )
+                print("[deployment] canonical demo seeded", flush=True)
             else:
-                logger.info(
-                    "✓ Seed-if-empty: DEMO-AUTO-1024 already present. Preserving existing data."
-                )
+                print("[deployment] canonical demo already exists; no changes made", flush=True)
         except Exception as exc:
-            logger.error("✗ Seed-if-empty failed: %s", exc)
+            msg = str(exc)
+            if "@" in msg and "://" in msg:
+                msg = "Database connection error (credentials redacted)"
+            print(f"[deployment] seed_if_empty failed: {type(exc).__name__}: {msg}", flush=True)
             sys.exit(1)
 
 

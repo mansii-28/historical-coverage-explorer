@@ -84,33 +84,23 @@ async def seed_if_empty(session: AsyncSession) -> bool:
     # 4. Record Initial Domain Audit Events
     await record_audit_event(
         session=session,
-        action="POLICY_CREATED",
-        entity_type="POLICY",
-        entity_id=policy.id,
+        event_type="POLICY_CREATED",
         policy_id=policy.id,
-        vehicle_id=None,
-        coverage_version_id=None,
-        claim_id=None,
-        actor="SYSTEM",
-        payload={
+        event_timestamp=now_utc,
+        metadata_json={
             "policy_number": policy.policy_number,
             "customer_name": policy.customer_name,
             "status": policy.status,
             "source": "seed_if_empty",
         },
-        event_time=now_utc,
     )
     await record_audit_event(
         session=session,
-        action="VEHICLE_ADDED",
-        entity_type="VEHICLE",
-        entity_id=vehicle.id,
+        event_type="VEHICLE_ADDED",
         policy_id=policy.id,
         vehicle_id=vehicle.id,
-        coverage_version_id=None,
-        claim_id=None,
-        actor="SYSTEM",
-        payload={
+        event_timestamp=datetime(2026, 1, 1, 0, 1, 0, tzinfo=UTC),
+        metadata_json={
             "vin": vehicle.vin,
             "make": vehicle.make,
             "model": vehicle.model,
@@ -118,19 +108,14 @@ async def seed_if_empty(session: AsyncSession) -> bool:
             "added_at": vehicle.added_at.isoformat(),
             "source": "seed_if_empty",
         },
-        event_time=now_utc,
     )
     await record_audit_event(
         session=session,
-        action="COVERAGE_ACTIVATED",
-        entity_type="COVERAGE_VERSION",
-        entity_id=cv.id,
+        event_type="COVERAGE_ACTIVATED",
         policy_id=policy.id,
         vehicle_id=vehicle.id,
-        coverage_version_id=cv.id,
-        claim_id=None,
-        actor="SYSTEM",
-        payload={
+        event_timestamp=datetime(2026, 1, 1, 0, 2, 0, tzinfo=UTC),
+        metadata_json={
             "coverage_type": cv.coverage_type,
             "liability_limit": str(cv.liability_limit),
             "deductible": str(cv.deductible),
@@ -138,7 +123,6 @@ async def seed_if_empty(session: AsyncSession) -> bool:
             "version_label": cv.version_label,
             "source": "seed_if_empty",
         },
-        event_time=now_utc,
     )
 
     await session.commit()

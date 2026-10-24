@@ -11,7 +11,8 @@
     "backend": {
       "root": "apps/backend/",
       "framework": "fastapi",
-      "entrypoint": "app.main:app"
+      "entrypoint": "app.main:app",
+      "buildCommand": "bash scripts/vercel-build.sh"
     }
   },
   "rewrites": [
