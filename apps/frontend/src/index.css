@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Tint-Inspired Visual Palette ─────────────────────────────────────────── */
+  /* ─── Editorial Visual Palette ──────────────────────────────────────────────── */
   /* Ink & Navy */
   --tint-navy-950: #070d1e;
   --tint-navy-900: #0a1128;

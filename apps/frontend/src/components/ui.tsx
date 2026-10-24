@@ -1,5 +1,5 @@
 // ─── Shared UI Components ─────────────────────────────────────────────────────
-// Tint-inspired geometric design system: clean editorial typography,
+// Clean geometric design system: restrained editorial typography,
 // flat saturated color fields, minimal borders, and high contrast.
 
 import React from 'react'

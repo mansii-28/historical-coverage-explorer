@@ -1,5 +1,5 @@
 // ─── Overview / Dashboard Page ────────────────────────────────────────────────
-// Product landing/dashboard hybrid inspired by Tint's editorial aesthetic:
+// Product landing/dashboard hybrid designed with an editorial aesthetic:
 // Two-column hero, canonical state product card, scenario timeline,
 // and a contrasting dark navy feature section.
 
@@ -71,7 +71,7 @@ export function OverviewPage({ state, onNavigate }: OverviewPageProps) {
           </div>
         </div>
 
-        {/* Right Column: Polished Product Card (Tint-Inspired UI Card) */}
+        {/* Right Column: Polished Canonical Product Card */}
         <div className="lg:col-span-5">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md relative overflow-hidden border-t-4 border-t-[#00c2cb]">
             {/* Header / Insured Info */}
@@ -193,7 +193,7 @@ export function OverviewPage({ state, onNavigate }: OverviewPageProps) {
         />
       </div>
 
-      {/* ─── Dark Feature Section: Tint-Inspired Contrast Rhythm ─────────────── */}
+      {/* ─── Dark Feature Section: High-Contrast Rhythm ──────────────────────── */}
       <div className="rounded-2xl bg-[#0a1128] text-white p-8 sm:p-10 lg:p-12 shadow-xl relative overflow-hidden">
         {/* Subtle decorative glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#00c2cb]/10 rounded-full blur-3xl pointer-events-none" />

@@ -1,5 +1,5 @@
 // ─── Main Application Component ──────────────────────────────────────────────
-// Historical Coverage Explorer — Tint-Inspired Editorial Product Experience
+// Historical Coverage Explorer — Clean Editorial Product Experience
 // Clean white editorial canvas, deep navy typography, horizontal navigation,
 // signature multicolor accent bands, and original product mark.
 

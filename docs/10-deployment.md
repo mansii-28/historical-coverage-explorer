@@ -85,24 +85,37 @@ A critical risk in continuous deployment pipelines is accidental schema mutation
 During Vercel build execution, the build script inspects `VERCEL_ENV`:
 
 ```bash
-if [ "$VERCEL_ENV" = "production" ]; then
-    echo "Production build detected: executing Alembic migrations..."
-    .venv/bin/alembic upgrade head
-    
-    echo "Running non-destructive seed_if_empty..."
-    .venv/bin/python -m app.scripts.seed_if_empty
-else
-    echo "Preview or development build: skipping production database mutation."
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[deployment] backend build initialization started"
+
+if [[ "${VERCEL_ENV:-}" != "production" ]]; then
+    echo "[deployment] non-production environment; skipping production DB migration"
+    exit 0
 fi
+
+if [[ -z "${DATABASE_URL_UNPOOLED:-}" ]]; then
+    echo "[deployment] DATABASE_URL_UNPOOLED is required"
+    exit 1
+fi
+
+echo "[deployment] applying Alembic migrations"
+PYTHONPATH=. alembic upgrade head
+echo "[deployment] Alembic migration complete"
+
+echo "[deployment] running seed_if_empty"
+PYTHONPATH=. python -m app.scripts.seed_if_empty
+echo "[deployment] backend database initialization complete"
 ```
 
 ### Safety Guarantees:
 1. **Preview Deployments:** Never mutate the production Neon database. Migrations only execute if an isolated preview database DSN is explicitly provided.
 2. **Direct Connection for Migrations:** Alembic prioritizes `DATABASE_URL_UNPOOLED` over `DATABASE_URL`. Transaction-level DDL migrations (e.g., table creation, enum modifications, schema index locks) bypass pgBouncer connection multiplexers to prevent transaction pinning failures.
-3. **Idempotent Seed-If-Empty:** Unlike `/api/demo/reset` (which destroys user state and restores factory defaults), `seed_if_empty` is strictly non-destructive:
+3. **Idempotent Seed-If-Empty:** Unlike `/api/demo/reset` (which resets synthetic demo state for evaluation), `seed_if_empty` is strictly non-destructive:
    - Checks if the canonical policy `DEMO-AUTO-1024` exists in the target database.
    - If present: exits immediately (`0` records modified). Preserves all existing vehicle states, claims, and audit logs.
-   - If absent (first deployment on a fresh Neon database): inserts the initial baseline records.
+   - If absent (first deployment on a fresh Neon database): inserts the initial baseline records and initial audit events.
 
 ---
 
@@ -115,24 +128,35 @@ The application defines two coordinated services and single-origin rewrite routi
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "frontend": {
-      "path": "apps/frontend"
+      "root": "apps/frontend/",
+      "framework": "vite",
+      "installCommand": "npm ci",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist"
     },
     "backend": {
-      "path": "apps/backend"
+      "root": "apps/backend/",
+      "framework": "fastapi",
+      "entrypoint": "app.main:app",
+      "buildCommand": "bash scripts/vercel-build.sh"
     }
   },
   "rewrites": [
     {
       "source": "/health",
-      "service": "backend"
+      "destination": { "service": "backend" }
+    },
+    {
+      "source": "/api",
+      "destination": { "service": "backend" }
     },
     {
       "source": "/api/(.*)",
-      "service": "backend"
+      "destination": { "service": "backend" }
     },
     {
       "source": "/(.*)",
-      "service": "frontend"
+      "destination": { "service": "frontend" }
     }
   ]
 }
@@ -165,15 +189,26 @@ This serves the React frontend and FastAPI backend behind a single reverse proxy
 
 Post-deployment verification is automated via `scripts/verify-vercel-deployment.mjs`. It executes a 12-point smoke sequence against the public deployment URL:
 
-1. **System Health Check:** `GET /health` returns status `healthy` and PostgreSQL `connected`.
-2. **OpenAPI Specification:** `GET /api/openapi.json` returns valid OpenAPI documentation schema.
-3. **Demo Reset:** `POST /api/demo/reset` successfully initializes canonical demo state.
-4. **Policy & Vehicle Inspection:** Verifies `DEMO-AUTO-1024` with active vehicles.
-5. **Vehicle Soft Removal:** Removes a vehicle and confirms `removed_at` timestamp is persisted.
-6. **Historical Covered Claim Filing:** Files a claim during valid coverage window $\rightarrow$ status `APPROVED`, pinned to Coverage Version 1.
-7. **Post-Removal Manual Review Claim:** Files a claim after removal date $\rightarrow$ status `MANUAL_REVIEW`, zero claim denial.
-8. **In-Memory PDF Generation:** `GET /api/coverage/1/proof.pdf` returns `application/pdf` with valid binary header `%PDF-`.
-9. **Audit Log Trail:** Verifies `VEHICLE_REMOVED` and claim audit events exist with valid correlation IDs.
-10. **Versioned Coverage Scenario:** Seeds `scenario=versioned` and proves historical lookup selects Version 1 vs Version 2 based on incident date.
-11. **Idempotent Seed Non-Destruction:** Confirms existing state is preserved.
-12. **Canonical State Restoration:** Resets back to clean demo state for subsequent users.
+1. **Step 1 — Health probe verifies database connectivity:** `GET /health` returns status `ok` and database `connected`.
+2. **Step 2 — Swagger API docs reachable:** `GET /api/docs` returns Swagger UI HTML with application markers.
+3. **Step 3 — Reset demonstration dataset to canonical baseline:** `POST /api/demo/reset` initializes canonical baseline.
+4. **Step 4 — Fetch canonical policy DEMO-AUTO-1024 and active vehicle:** `GET /api/policies/1` and `GET /api/policies/1/vehicles` return active 2024 BMW X3.
+5. **Step 5 — Soft-remove vehicle effective Jan 15, 2026:** `POST /api/vehicles/{id}/remove` stamps `removed_at` and closes active coverage version.
+6. **Step 6 — Evaluate retrospective loss date Jan 10 (returns COVERAGE_FOUND):** `POST /api/coverage/check` returns `COVERAGE_FOUND` and governing Coverage Version 1 ID.
+7. **Step 7 — File retrospective claim and verify pinned coverage version:** `POST /api/claims` creates claim permanently pinned to Coverage Version 1.
+8. **Step 8 — Evaluate post-removal incident Jan 20 (returns REQUIRES_MANUAL_REVIEW, zero denial):** `POST /api/coverage/check` returns `REQUIRES_MANUAL_REVIEW` and `coverage_version: null`.
+9. **Step 9 — Generate point-in-time Proof of Insurance PDF in memory:** `GET /api/coverage/{id}/proof.pdf` returns `application/pdf` with `X-Demo-Notice: DEMO ONLY` header and `%PDF-` binary magic bytes (synthetic demo document; not legally valid proof of insurance).
+10. **Step 10 — Inspect immutable domain audit events:** `GET /api/policies/1/audit-events` verifies `VEHICLE_REMOVED` and `CLAIM_CREATED` events exist with correlation IDs.
+11. **Step 11 — Verify multi-version interval coverage selection (Jan 5 -> V1, Jan 10 -> V2):** Seeds `scenario=versioned` and asserts Jan 5 selects Version 1 ($1,000 deductible) while Jan 10 selects Version 2 ($500 deductible).
+12. **Step 12 — Restore canonical demonstration state at completion:** `POST /api/demo/reset?scenario=canonical` restores pristine demo state.
+
+---
+
+## 8. Verification & Test Metrics
+
+- **Verified Suite:** 58 automated test cases: 39 backend, 14 frontend, 5 Playwright E2E, plus a separate 12-step public deployment verification.
+- **Backend Pytest:** 39 passed (88% aggregate backend coverage)
+- **Frontend Vitest / RTL:** 14 passed
+- **Playwright E2E Browser Journeys:** 5 passed
+- **Public Domain:** `https://historical-coverage-explorer.vercel.app`
+- **Additional Production Validation — Redeploy Persistence:** Tested separately from the 12 scripted smoke steps; confirmed that soft vehicle removals and pinned claims survive complete Vercel redeployments.

@@ -123,19 +123,31 @@
 
 ---
 
-## Phase 5 — Handoff, Demo Package, Documentation, and Presentation Support
-**Goal:** Make the repository understandable to a recruiter, PM, Tech Lead, or developer.
+## Phase 5 — Vercel & Neon Public Deployment and Visual Redesign
+**Goal:** Deploy the complete application publicly using Vercel Multi-Services and Neon PostgreSQL, and rebrand frontend interface with a custom, editorial design system.
 
 Key deliverables:
-- docs/08-demo-guide.md
-- docs/09-handoff.md
-- docs/10-future-improvements.md
-- HANDOFF.md
-- DEMO_SCRIPT.md (2–3 minute walkthrough)
-- ONE_PAGER.md
-- TECHNICAL_DEEP_DIVE.md
-- PRODUCT_DECISIONS.md
-- docs/presentation-outline.md
-- Screenshot-to-slide mapping
+- Vercel multi-service monorepo configuration (`vercel.json`)
+- Neon PostgreSQL connection normalization and NullPool serverless configuration
+- Automated build migration pipeline (`scripts/vercel-build.sh` using `DATABASE_URL_UNPOOLED`)
+- Non-destructive idempotent baseline seed (`seed_if_empty.py`)
+- Public prototype interface redesign across all 6 views and modals
+- Public deployment verification suite (`scripts/verify-vercel-deployment.mjs`)
+- Live public deployment: `https://historical-coverage-explorer.vercel.app`
 
-**Status:** NOT STARTED — awaiting authorization
+**Status:** ✅ COMPLETE
+
+---
+
+## Phase 6 — Handoff, Demo Package, Documentation, and Interview Readiness
+**Goal:** Make the repository, product story, and architecture immediately accessible to recruiters, PMs, and engineering leaders.
+
+Key deliverables:
+- Comprehensive public README.md rewrite with live links, architecture, and visual gallery
+- Product Case Study (`docs/11-product-case-study.md`)
+- Technical Deep Dive (`docs/12-technical-deep-dive.md`)
+- 3–5 Minute Interviewer Demo Guide (`docs/13-demo-guide.md`)
+- Updated deployment architecture documentation (`docs/10-deployment.md`)
+- Repository-wide consistency and terminology audit
+
+**Status:** 🔄 IN PROGRESS

@@ -1,7 +1,7 @@
 // ─── File Claim Page ─────────────────────────────────────────────────────────
 // Implements point-in-time coverage lookup, covered vs manual review results,
 // and claim creation with pinned coverage version.
-// Tint-inspired two-column layout, cyan/mint positive treatment for COVERAGE_FOUND,
+// Two-column layout, cyan/mint positive treatment for COVERAGE_FOUND,
 // warm amber for REQUIRES_MANUAL_REVIEW (never red denial), and strong pinned version block.
 
 import React, { useState } from 'react'

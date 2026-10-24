@@ -1,6 +1,6 @@
 // ─── Architecture & About Page ────────────────────────────────────────────────
 // Visual overview of system architecture, temporal data model, and foundational product decisions.
-// Dark navy section rhythm inspired by Tint's platform architecture visual language.
+// Dark navy section rhythm reflecting the public prototype redesign visual language.
 
 import {
   Server,
