@@ -57,5 +57,6 @@ evidence/*.jsonl
 # ─── Generated PDFs ─────────────────────────────────────────────────────────────
 *.pdf
 !evidence/generated/demo-proof-of-insurance.pdf
+!docs/Historical_Coverage_Explorer_Product_Concept.pdf
 .vercel
 .env*
